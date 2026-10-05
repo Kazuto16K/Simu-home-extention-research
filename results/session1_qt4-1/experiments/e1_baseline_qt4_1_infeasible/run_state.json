@@ -1,0 +1,28 @@
+{
+  "run_id": "e1_baseline_qt4_1_infeasible",
+  "created_at": "2026-10-03T17:16:09",
+  "updated_at": "2026-10-03T17:50:46",
+  "models": {
+    "google_gemma-4-31b-it": {
+      "model": "google/gemma-4-31b-it",
+      "status": "pending",
+      "attempts": 1,
+      "returncode": 0,
+      "error": "",
+      "port": 34239,
+      "updated_at": "2026-10-03T17:50:46",
+      "episode_progress": {
+        "total": 10,
+        "observed_files": 10,
+        "completed": 3,
+        "pending": 7,
+        "completed_without_runtime_error": 3,
+        "runtime_errors": 7,
+        "invalid_files": 0,
+        "completion_rate": 30.0,
+        "updated_at": "2026-10-03T17:50:46",
+        "last_completed_file": "qt4-1_infeasible_seed_45.json"
+      }
+    }
+  }
+}

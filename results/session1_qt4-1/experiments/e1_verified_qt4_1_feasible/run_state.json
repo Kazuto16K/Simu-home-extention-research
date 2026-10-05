@@ -1,0 +1,28 @@
+{
+  "run_id": "e1_verified_qt4_1_feasible",
+  "created_at": "2026-10-03T15:51:27",
+  "updated_at": "2026-10-03T17:16:09",
+  "models": {
+    "google_gemma-4-31b-it": {
+      "model": "google/gemma-4-31b-it",
+      "status": "success",
+      "attempts": 1,
+      "returncode": 0,
+      "error": "",
+      "port": 51963,
+      "updated_at": "2026-10-03T17:16:09",
+      "episode_progress": {
+        "total": 10,
+        "observed_files": 10,
+        "completed": 10,
+        "pending": 0,
+        "completed_without_runtime_error": 10,
+        "runtime_errors": 0,
+        "invalid_files": 0,
+        "completion_rate": 100.0,
+        "updated_at": "2026-10-03T17:16:09",
+        "last_completed_file": "qt4-1_feasible_seed_50.json"
+      }
+    }
+  }
+}

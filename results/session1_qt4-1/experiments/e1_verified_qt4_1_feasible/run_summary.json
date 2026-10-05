@@ -1,0 +1,26 @@
+{
+  "run_id": "e1_verified_qt4_1_feasible",
+  "generated_at": "2026-10-03T17:16:09",
+  "output_dir": "experiments/e1_verified_qt4_1_feasible",
+  "totals": {
+    "models": 1,
+    "success": 1,
+    "failed": 0
+  },
+  "successful_models": [
+    "google/gemma-4-31b-it"
+  ],
+  "failed_models": [],
+  "results": [
+    {
+      "original_model": "google/gemma-4-31b-it",
+      "safe_model": "google_gemma-4-31b-it",
+      "port": 51963,
+      "success": true,
+      "returncode": 0,
+      "attempts": 1,
+      "phase": "evaluation",
+      "error": ""
+    }
+  ]
+}

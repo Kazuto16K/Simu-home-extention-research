@@ -1,0 +1,238 @@
+{
+  "baseline|qt4-1|feasible": {
+    "google_gemma-4-31b-it": {
+      "aggregated_at": "2026-10-03T15:51:27",
+      "result_dir": "experiments/e1_baseline_qt4_1_feasible/google_gemma-4-31b-it",
+      "overall": {
+        "total": 10,
+        "evaluated_total": 10,
+        "infra_errors": 0,
+        "schema_errors": 0,
+        "infra_error_rate": 0.0,
+        "schema_error_rate": 0.0,
+        "correct": 2,
+        "accuracy": 0.2,
+        "accuracy_denominator": "evaluated_total",
+        "accuracy_std": 0.4,
+        "avg_duration_sec": 218.13,
+        "duration_std": 60.43,
+        "avg_actions": 6.5,
+        "actions_std": 1.57
+      },
+      "by_query_type": {
+        "qt4-1": {
+          "feasible": {
+            "total": 10,
+            "evaluated_total": 10,
+            "infra_errors": 0,
+            "schema_errors": 0,
+            "infra_error_rate": 0.0,
+            "schema_error_rate": 0.0,
+            "correct": 2,
+            "accuracy": 0.2,
+            "accuracy_denominator": "evaluated_total",
+            "accuracy_std": 0.4,
+            "avg_duration_sec": 218.13,
+            "duration_std": 60.43,
+            "avg_actions": 6.5,
+            "actions_std": 1.57
+          },
+          "total": {
+            "total": 10,
+            "evaluated_total": 10,
+            "infra_errors": 0,
+            "schema_errors": 0,
+            "infra_error_rate": 0.0,
+            "schema_error_rate": 0.0,
+            "correct": 2,
+            "accuracy": 0.2,
+            "accuracy_denominator": "evaluated_total",
+            "accuracy_std": 0.4,
+            "avg_duration_sec": 218.13,
+            "duration_std": 60.43,
+            "avg_actions": 6.5,
+            "actions_std": 1.57
+          }
+        }
+      },
+      "skipped_files": []
+    }
+  },
+  "verified|qt4-1|feasible": {
+    "google_gemma-4-31b-it": {
+      "aggregated_at": "2026-10-03T17:16:09",
+      "result_dir": "experiments/e1_verified_qt4_1_feasible/google_gemma-4-31b-it",
+      "overall": {
+        "total": 10,
+        "evaluated_total": 10,
+        "infra_errors": 0,
+        "schema_errors": 0,
+        "infra_error_rate": 0.0,
+        "schema_error_rate": 0.0,
+        "correct": 2,
+        "accuracy": 0.2,
+        "accuracy_denominator": "evaluated_total",
+        "accuracy_std": 0.4,
+        "avg_duration_sec": 377.47,
+        "duration_std": 111.7,
+        "avg_actions": 7.3,
+        "actions_std": 1.19
+      },
+      "by_query_type": {
+        "qt4-1": {
+          "feasible": {
+            "total": 10,
+            "evaluated_total": 10,
+            "infra_errors": 0,
+            "schema_errors": 0,
+            "infra_error_rate": 0.0,
+            "schema_error_rate": 0.0,
+            "correct": 2,
+            "accuracy": 0.2,
+            "accuracy_denominator": "evaluated_total",
+            "accuracy_std": 0.4,
+            "avg_duration_sec": 377.47,
+            "duration_std": 111.7,
+            "avg_actions": 7.3,
+            "actions_std": 1.19
+          },
+          "total": {
+            "total": 10,
+            "evaluated_total": 10,
+            "infra_errors": 0,
+            "schema_errors": 0,
+            "infra_error_rate": 0.0,
+            "schema_error_rate": 0.0,
+            "correct": 2,
+            "accuracy": 0.2,
+            "accuracy_denominator": "evaluated_total",
+            "accuracy_std": 0.4,
+            "avg_duration_sec": 377.47,
+            "duration_std": 111.7,
+            "avg_actions": 7.3,
+            "actions_std": 1.19
+          }
+        }
+      },
+      "skipped_files": []
+    }
+  },
+  "baseline|qt4-1|infeasible": {
+    "google_gemma-4-31b-it": {
+      "aggregated_at": "2026-10-03T17:50:46",
+      "result_dir": "experiments/e1_baseline_qt4_1_infeasible/google_gemma-4-31b-it",
+      "overall": {
+        "total": 10,
+        "evaluated_total": 10,
+        "infra_errors": 0,
+        "schema_errors": 0,
+        "infra_error_rate": 0.0,
+        "schema_error_rate": 0.0,
+        "correct": 3,
+        "accuracy": 0.3,
+        "accuracy_denominator": "evaluated_total",
+        "accuracy_std": 0.4583,
+        "avg_duration_sec": 158.93,
+        "duration_std": 64.1,
+        "avg_actions": 2.4,
+        "actions_std": 1.28
+      },
+      "by_query_type": {
+        "qt4-1": {
+          "infeasible": {
+            "total": 10,
+            "evaluated_total": 10,
+            "infra_errors": 0,
+            "schema_errors": 0,
+            "infra_error_rate": 0.0,
+            "schema_error_rate": 0.0,
+            "correct": 3,
+            "accuracy": 0.3,
+            "accuracy_denominator": "evaluated_total",
+            "accuracy_std": 0.4583,
+            "avg_duration_sec": 158.93,
+            "duration_std": 64.1,
+            "avg_actions": 2.4,
+            "actions_std": 1.28
+          },
+          "total": {
+            "total": 10,
+            "evaluated_total": 10,
+            "infra_errors": 0,
+            "schema_errors": 0,
+            "infra_error_rate": 0.0,
+            "schema_error_rate": 0.0,
+            "correct": 3,
+            "accuracy": 0.3,
+            "accuracy_denominator": "evaluated_total",
+            "accuracy_std": 0.4583,
+            "avg_duration_sec": 158.93,
+            "duration_std": 64.1,
+            "avg_actions": 2.4,
+            "actions_std": 1.28
+          }
+        }
+      },
+      "skipped_files": []
+    }
+  },
+  "verified|qt4-1|infeasible": {
+    "google_gemma-4-31b-it": {
+      "aggregated_at": "2026-10-03T18:33:49",
+      "result_dir": "experiments/e1_verified_qt4_1_infeasible/google_gemma-4-31b-it",
+      "overall": {
+        "total": 10,
+        "evaluated_total": 10,
+        "infra_errors": 0,
+        "schema_errors": 0,
+        "infra_error_rate": 0.0,
+        "schema_error_rate": 0.0,
+        "correct": 10,
+        "accuracy": 1.0,
+        "accuracy_denominator": "evaluated_total",
+        "accuracy_std": 0.0,
+        "avg_duration_sec": 208.44,
+        "duration_std": 127.72,
+        "avg_actions": 3.4,
+        "actions_std": 2.11
+      },
+      "by_query_type": {
+        "qt4-1": {
+          "infeasible": {
+            "total": 10,
+            "evaluated_total": 10,
+            "infra_errors": 0,
+            "schema_errors": 0,
+            "infra_error_rate": 0.0,
+            "schema_error_rate": 0.0,
+            "correct": 10,
+            "accuracy": 1.0,
+            "accuracy_denominator": "evaluated_total",
+            "accuracy_std": 0.0,
+            "avg_duration_sec": 208.44,
+            "duration_std": 127.72,
+            "avg_actions": 3.4,
+            "actions_std": 2.11
+          },
+          "total": {
+            "total": 10,
+            "evaluated_total": 10,
+            "infra_errors": 0,
+            "schema_errors": 0,
+            "infra_error_rate": 0.0,
+            "schema_error_rate": 0.0,
+            "correct": 10,
+            "accuracy": 1.0,
+            "accuracy_denominator": "evaluated_total",
+            "accuracy_std": 0.0,
+            "avg_duration_sec": 208.44,
+            "duration_std": 127.72,
+            "avg_actions": 3.4,
+            "actions_std": 2.11
+          }
+        }
+      },
+      "skipped_files": []
+    }
+  }
+}

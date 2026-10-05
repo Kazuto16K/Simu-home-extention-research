@@ -1,0 +1,31 @@
+schema: simuhome-eval-spec-v1
+api:
+  base: https://integrate.api.nvidia.com/v1
+  key: env:NVIDIA_API_KEY
+run:
+  id: e1_baseline_qt4_1_infeasible
+  output_root: experiments
+episode:
+  dir: data/benchmark
+  qt: qt4-1
+  case: infeasible
+  seed: 5,10,15,20,25,30,35,40,45,50
+strategy:
+  name: react
+  timeout: 120
+  temperature: 0.0
+  max_steps: 20
+orchestration:
+  max_workers: 1
+  simulator_start_timeout: 30
+  simulator_start_retries: 1
+  evaluation_retries: 1
+  allow_partial_start: true
+judge:
+  model: google/gemma-4-31b-it
+  api_base: https://integrate.api.nvidia.com/v1
+  api_key: env:NVIDIA_API_KEY
+models:
+- model: google/gemma-4-31b-it
+  api_base: https://integrate.api.nvidia.com/v1
+  api_key: env:NVIDIA_API_KEY

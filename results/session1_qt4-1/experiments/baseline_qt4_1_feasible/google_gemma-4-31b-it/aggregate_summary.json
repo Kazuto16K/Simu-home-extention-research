@@ -1,0 +1,57 @@
+{
+  "aggregated_at": "2026-10-03T14:07:45",
+  "result_dir": "experiments/baseline_qt4_1_feasible/google_gemma-4-31b-it",
+  "overall": {
+    "total": 3,
+    "evaluated_total": 3,
+    "infra_errors": 0,
+    "schema_errors": 0,
+    "infra_error_rate": 0.0,
+    "schema_error_rate": 0.0,
+    "correct": 0,
+    "accuracy": 0.0,
+    "accuracy_denominator": "evaluated_total",
+    "accuracy_std": 0.0,
+    "avg_duration_sec": 154.03,
+    "duration_std": 96.13,
+    "avg_actions": 7.33,
+    "actions_std": 0.94
+  },
+  "by_query_type": {
+    "qt4-1": {
+      "feasible": {
+        "total": 3,
+        "evaluated_total": 3,
+        "infra_errors": 0,
+        "schema_errors": 0,
+        "infra_error_rate": 0.0,
+        "schema_error_rate": 0.0,
+        "correct": 0,
+        "accuracy": 0.0,
+        "accuracy_denominator": "evaluated_total",
+        "accuracy_std": 0.0,
+        "avg_duration_sec": 154.03,
+        "duration_std": 96.13,
+        "avg_actions": 7.33,
+        "actions_std": 0.94
+      },
+      "total": {
+        "total": 3,
+        "evaluated_total": 3,
+        "infra_errors": 0,
+        "schema_errors": 0,
+        "infra_error_rate": 0.0,
+        "schema_error_rate": 0.0,
+        "correct": 0,
+        "accuracy": 0.0,
+        "accuracy_denominator": "evaluated_total",
+        "accuracy_std": 0.0,
+        "avg_duration_sec": 154.03,
+        "duration_std": 96.13,
+        "avg_actions": 7.33,
+        "actions_std": 0.94
+      }
+    }
+  },
+  "skipped_files": []
+}

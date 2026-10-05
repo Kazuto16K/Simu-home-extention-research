@@ -1,0 +1,221 @@
+{
+  "stats": {
+    "calls": 42,
+    "no_query": 0,
+    "parse_fail": 0,
+    "passed": 28,
+    "rejected": 14
+  },
+  "log": [
+    [
+      "I'm lounging on the couch reading and want to time things so I can grab a snack and then focus on wo",
+      "passed",
+      "All scheduling constraints are consistent."
+    ],
+    [
+      "I'm lounging on the couch reading and want to time things so I can grab a snack and then focus on wo",
+      "passed",
+      "All scheduling constraints are consistent."
+    ],
+    [
+      "I'm lounging on the couch reading and want to time things so I can grab a snack and then focus on wo",
+      "passed",
+      "All scheduling constraints are consistent."
+    ],
+    [
+      "I am at my desk finishing a report and want to cut the glare, move living room blinds 1 to 80.0% clo",
+      "passed",
+      "All scheduling constraints are consistent."
+    ],
+    [
+      "I am at my desk finishing a report and want to cut the glare, move living room blinds 1 to 80.0% clo",
+      "passed",
+      "All scheduling constraints are consistent."
+    ],
+    [
+      "I am at my desk finishing a report and want to cut the glare, move living room blinds 1 to 80.0% clo",
+      "passed",
+      "All scheduling constraints are consistent."
+    ],
+    [
+      "I am at my desk finishing a report and want to cut the glare, move living room blinds 1 to 80.0% clo",
+      "passed",
+      "All scheduling constraints are consistent."
+    ],
+    [
+      "Folding a pile of laundry by the washer and I want this set up while I am here. Turn on living room ",
+      "passed",
+      "All scheduling constraints are consistent."
+    ],
+    [
+      "Folding a pile of laundry by the washer and I want this set up while I am here. Turn on living room ",
+      "passed",
+      "All scheduling constraints are consistent."
+    ],
+    [
+      "Folding a pile of laundry by the washer and I want this set up while I am here. Turn on living room ",
+      "passed",
+      "All scheduling constraints are consistent."
+    ],
+    [
+      "Finishing up at the kitchen counter and juggling plates, set dimmer light 1 in the living room to po",
+      "passed",
+      "All scheduling constraints are consistent."
+    ],
+    [
+      "Finishing up at the kitchen counter and juggling plates, set dimmer light 1 in the living room to po",
+      "passed",
+      "All scheduling constraints are consistent."
+    ],
+    [
+      "Finishing up at the kitchen counter and juggling plates, set dimmer light 1 in the living room to po",
+      "passed",
+      "All scheduling constraints are consistent."
+    ],
+    [
+      "Finishing up at the kitchen counter and juggling plates, set dimmer light 1 in the living room to po",
+      "passed",
+      "All scheduling constraints are consistent."
+    ],
+    [
+      "I am tucking the kids into bed and need a quick setup. Turn on living room light 1 in 6 minutes from",
+      "passed",
+      "All scheduling constraints are consistent."
+    ],
+    [
+      "I am tucking the kids into bed and need a quick setup. Turn on living room light 1 in 6 minutes from",
+      "passed",
+      "All scheduling constraints are consistent."
+    ],
+    [
+      "I am folding a pile of damp towels over here and want the lights timed so I do not keep running betw",
+      "passed",
+      "All scheduling constraints are consistent."
+    ],
+    [
+      "I am folding a pile of damp towels over here and want the lights timed so I do not keep running betw",
+      "passed",
+      "All scheduling constraints are consistent."
+    ],
+    [
+      "I am folding a pile of damp towels over here and want the lights timed so I do not keep running betw",
+      "passed",
+      "All scheduling constraints are consistent."
+    ],
+    [
+      "I am rinsing pans at the sink and want the bathroom warm for a quick soak. Switch on heat pump 1 in ",
+      "passed",
+      "All scheduling constraints are consistent."
+    ],
+    [
+      "I am rinsing pans at the sink and want the bathroom warm for a quick soak. Switch on heat pump 1 in ",
+      "passed",
+      "All scheduling constraints are consistent."
+    ],
+    [
+      "Quick thing I'm over by the washer folding the mountain of laundry. Don't want to fumble for the swi",
+      "passed",
+      "All scheduling constraints are consistent."
+    ],
+    [
+      "Quick thing while I am at my desk finishing a report. Power up dimmer light 1 in bathroom to level 7",
+      "passed",
+      "All scheduling constraints are consistent."
+    ],
+    [
+      "Quick thing while I am at my desk finishing a report. Power up dimmer light 1 in bathroom to level 7",
+      "passed",
+      "All scheduling constraints are consistent."
+    ],
+    [
+      "Quick thing while I am at my desk finishing a report. Power up dimmer light 1 in bathroom to level 7",
+      "passed",
+      "All scheduling constraints are consistent."
+    ],
+    [
+      "Quick thing while I am at my desk finishing a report. Power up dimmer light 1 in bathroom to level 7",
+      "passed",
+      "All scheduling constraints are consistent."
+    ],
+    [
+      "Quick heads up I am rinsing dishes at the sink and want to get the rooms ready before I jump into a ",
+      "passed",
+      "All scheduling constraints are consistent."
+    ],
+    [
+      "Quick heads up I am rinsing dishes at the sink and want to get the rooms ready before I jump into a ",
+      "passed",
+      "All scheduling constraints are consistent."
+    ],
+    [
+      "Schedule light 1 in the kitchen to turn on at 7 PM, that is 25 minutes from now, so I can start cook",
+      "rejected",
+      "Infeasible schedule \u2014 Goal 0: stated clock time 19:00 vs. 25.0 min after now"
+    ],
+    [
+      "Schedule light 1 in the kitchen to turn on at 7 PM, that is 25 minutes from now, so I can start cook",
+      "rejected",
+      "Infeasible schedule \u2014 Goal 0: 25.0 min after now vs. stated clock time 19:00"
+    ],
+    [
+      "Schedule light 1 in the kitchen to turn on at 7 PM, that is 25 minutes from now, so I can start cook",
+      "rejected",
+      "Infeasible schedule \u2014 Goal 0: 25.0 min after now vs. stated clock time 19:00"
+    ],
+    [
+      "At 12:23 PM, that is 12 minutes from now, turn on light 1 in the living room. I am in the utility ro",
+      "rejected",
+      "Infeasible schedule \u2014 Goal 0: 12.0 min after now vs. stated clock time 12:23"
+    ],
+    [
+      "At 12:23 PM, that is 12 minutes from now, turn on light 1 in the living room. I am in the utility ro",
+      "rejected",
+      "Infeasible schedule \u2014 Goal 0: stated clock time 12:23 vs. 12.0 min after now"
+    ],
+    [
+      "At 12:23 PM, that is 12 minutes from now, turn on light 1 in the living room. I am in the utility ro",
+      "rejected",
+      "Infeasible schedule \u2014 Goal 0: 12.0 min after now vs. stated clock time 12:23"
+    ],
+    [
+      "At 11:49 AM, that's 15 minutes from now, turn on dimmer light 1 in the living room and set it to 60 ",
+      "rejected",
+      "Infeasible schedule \u2014 Goal 0: 15.0 min after now vs. stated clock time 11:49"
+    ],
+    [
+      "At 11:49 AM, that's 15 minutes from now, turn on dimmer light 1 in the living room and set it to 60 ",
+      "rejected",
+      "Infeasible schedule \u2014 Goal 0: stated clock time 11:49 vs. 15.0 min after now"
+    ],
+    [
+      "At 11:49 AM, that's 15 minutes from now, turn on dimmer light 1 in the living room and set it to 60 ",
+      "rejected",
+      "Infeasible schedule \u2014 Goal 0: stated clock time 11:49 vs. 15.0 min after now"
+    ],
+    [
+      "At 6:13 PM, that is 5 minutes from now, turn on dimmer light 1 in the utility room and set it to 70 ",
+      "rejected",
+      "Infeasible schedule \u2014 Goal 0: stated clock time 18:13 vs. 5.0 min after now"
+    ],
+    [
+      "At 6:13 PM, that is 5 minutes from now, turn on dimmer light 1 in the utility room and set it to 70 ",
+      "rejected",
+      "Infeasible schedule \u2014 Goal 0: stated clock time 18:13 vs. 5.0 min after now"
+    ],
+    [
+      "At 5:52 PM, that is 14 minutes from now, switch heat pump 1 in the bathroom to heating mode so the r",
+      "rejected",
+      "Infeasible schedule \u2014 Goal 0: stated clock time 17:52 vs. 14.0 min after now"
+    ],
+    [
+      "At 5:52 PM, that is 14 minutes from now, switch heat pump 1 in the bathroom to heating mode so the r",
+      "rejected",
+      "Infeasible schedule \u2014 Goal 0: 14.0 min after now vs. stated clock time 17:52"
+    ],
+    [
+      "At 4:59 PM, that is 20 minutes from now, please turn on air purifier 1 in the bathroom and set the f",
+      "rejected",
+      "Infeasible schedule \u2014 Goal 0: 20.0 min after now vs. stated clock time 16:59"
+    ]
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "val": {
+    "n": 25,
+    "valid": 25,
+    "exact": 9,
+    "verdict_ok": 23,
+    "verdict_n": 23
+  },
+  "test": {
+    "n": 54,
+    "valid": 54,
+    "exact": 20,
+    "verdict_ok": 42,
+    "verdict_n": 46
+  }
+}
