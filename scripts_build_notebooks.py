@@ -1721,20 +1721,16 @@ nb_full = [
     md(
         "## 4. Generate (query, IR) training data",
         "",
-        "Deterministic extraction (no LLM calls) — see "
-        "`src/extract_ir_from_episode.py`. The original ~200 native "
-        "benchmark episodes are held out entirely from fine-tuning; only "
-        "synthesized episodes (new seeds, via SimuHome's own generator) go "
-        "into train/val. Generation itself needs an LLM to write the "
-        "synthetic NL queries — reuses the same free `LLM_MODEL` chosen in "
-        "section 3 (OpenRouter's free tier or the local vLLM server).",
-    ),
-    code(
-        "os.chdir(os.path.join(PROJECT_ROOT, 'SimuHome'))",
-        "!python -m src.cli.episode_generator --help",
-    ),
-    code(
-        "import os, sys, glob, json, collections, subprocess, yaml",
+        "**What this section does:** it builds the *training data* for the intent parser (the small model trained in section 5). "
+        "It does not train anything itself.",
+        "",
+        "**How the labels are made (no LLM, no manual work):** `src/extract_ir_from_episode.py` reads the answer key already stored in each "
+        "SimuHome episode (`eval.goals`, and `temporal_conflict` for infeasible ones) and writes the target IR. Each training pair is "
+        "(request sentence, IR).",
+        "",
+        "**Which episodes are used (current setting):** the 300 native QT4 benchmark episodes, split by seed: every episode whose seed is divisible by 5 "
+        "(54) is **held out** for testing; the rest are split 90/10 into train (221) and validation (25). Generating extra synthetic episodes is "
+        "possible (`RUN_GENERATION = True`; it needs an LLM to write the requests) but is **off**.",
         "",
         "# episode.home is REQUIRED by SimuHome's generator (the earlier run died with",
         "# 'episode.home must be a mapping'); this block is copied from gen_spec.example.yaml.",
