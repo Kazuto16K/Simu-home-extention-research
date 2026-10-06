@@ -34,7 +34,7 @@ contradictory requests with a plain-language reason. The big agent LLM is not re
 
 ```
 README.md, ARCHITECTURE.md, CODE_EXPLAINS.md   documentation
-docs/                      PROJECT_REPORT.md, architecture.png, e1_results.png, make_figures.py
+docs/                      PROJECT_REPORT.md, DATA_AND_RESULTS.md, Project_Presentation.pptx (5 slides), architecture.png, simuhome_vs_ours.png, e1_results.png, make_figures.py
 papers/                    the SimuHome paper (see papers/README.md for licence notes)
 results/session1_qt4-1/    raw E1 outputs from the first Kaggle session (JSON + per-episode traces)
 src/                       ir_schema.py, constraint_encoder.py, extract_ir_from_episode.py

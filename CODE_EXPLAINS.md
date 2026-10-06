@@ -129,15 +129,22 @@ to try another provider.
 SimuHome calls the model through the `openai` Python library. The shim replaces
 `Completions.create` with a wrapper that, for every call: removes unsupported parameters, strips
 `strict`/`additionalProperties` from the JSON schema, waits so calls stay under the rate limit, and counts
-the call (`LLM_CALLS['count']`). It is installed once and is safe to re-run. Nothing in SimuHome's source
-is modified; this is monkeypatching.
+the call (`LLM_CALLS['count']`). It also adds two protections for unattended runs:
+
+- **Retries (`SHIM_RETRIES = 4`).** On provider-side errors (5xx such as 504, 429, timeouts, dropped
+  connections) it waits 20, 40, 80, 160 s and tries again, printing `[shim] ...: retry n/4`.
+- **Hard call cap (`LLM_CALL_CAP = 1500`).** Every attempt, retries included, counts. Past the cap the shim
+  raises instead of calling the API, and the plan runner will not start a run that could pass it.
+
+It is installed once and is safe to re-run. Nothing in SimuHome's source is modified; this is monkeypatching.
 
 ### Cells 16-17: the preflight (a cheap guard)
 
-Sends two tiny requests: a plain one, and one shaped like the real agent's request. It then checks that the
-reply parses as `{thought, action, action_input}`. If the API fails, or the model cannot produce the format,
-it **raises**, so an unattended run stops in minutes instead of wasting the night (set
-`STOP_ON_BAD_FORMAT = False` to only warn).
+Sends two tiny requests: a plain one, and one shaped like the real agent's request. If the API fails (after the
+shim's retries) it **raises**, so an unattended run stops in minutes. It also tries to parse the reply as
+`{thought, action, action_input}`, but this probe uses a toy prompt (the real agent has a long system prompt
+demanding JSON), so it is only a hint: `STOP_ON_BAD_FORMAT = False` by default and the real format check is the
+agent smoke test in the E1 cell.
 
 ### Cell 18: the simulator
 
@@ -265,9 +272,14 @@ The three **arms** (versions compared on the same episodes and agent):
 | `selfcheck` | off | consistency instruction | "why not just ask the model to be careful?" |
 | `verified` | on | none | agent + parser + Z3 |
 
+**Agent smoke test (`AGENT_SMOKE_TEST = True`).** Before the plan, one real episode (qt4-1 feasible) is run
+through the actual agent. If it shows `schema_errors`, `infra_errors` or zero evaluated episodes, the cell raises
+with a clear message. This costs about 8 LLM calls and a few minutes, and is the faithful check that the model
+can run the ReAct loop.
+
 For each plan item the runner: skips it if already complete; stops if the time budget would be exceeded;
 sets the arm's switches; runs `run_inproc`; aggregates; **saves everything after every run**; logs time, number
-of LLM calls and verifier counters. It counts a run as "bad" if it crashes or has API errors, and **stops the
+of LLM calls and verifier counters. It counts a run as "bad" if it crashes, has API errors, or has more than 3 schema errors, and **stops the
 plan after two bad runs in a row**. Seeds come from the held-out file, so the parser never saw those episodes.
 
 ### Cells 46-47: results table and bundle
@@ -329,6 +341,9 @@ concurrency, durations).
 | verifier counters stay 0 on the verified arm | the patch was applied to a second copy of the module, or the evaluator ran in a separate process |
 | `infra_errors > 0` | quota, 429/5xx, or a retired model; not an agent problem |
 | `HTTP 410` | the hosted model was retired; change `LLM_MODEL` |
+| `504` / `5xx` in the preflight | provider overloaded; the shim retries for about 5 minutes, then fails; try later |
+| preflight says "NOT PARSEABLE" | only a hint (toy prompt); the agent smoke test decides |
+| `LLM call cap reached` | the safety cap `LLM_CALL_CAP` was hit; raise it only if you mean to |
 | `schema_errors > 0` | the model cannot produce `{thought, action, action_input}` |
 | very slow runs | about 45 s per call on the free tier; that is network latency, not the notebook |
 

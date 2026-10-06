@@ -82,5 +82,72 @@ def results():
     fig.savefig(os.path.join(HERE, "e1_results.png"), dpi=170, bbox_inches="tight", facecolor="white")
 
 
+def comparison():
+    """SimuHome as shipped vs the paper's suggested pre-validation vs this project's verifier."""
+    fig, ax = plt.subplots(figsize=(15, 10))
+    ax.set_xlim(0, 15); ax.set_ylim(-0.6, 10); ax.axis("off")
+    ax.text(7.5, 9.85, "SimuHome vs. our architecture", ha="center", va="top", fontsize=17, fontweight="bold", color=NAVY)
+
+    def bx(x, y, w, h, text, color, tc="white", fs=12.5):
+        ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0.02,rounding_size=0.12", fc=color, ec="none"))
+        ax.text(x + w / 2, y + h / 2, text, ha="center", va="center", color=tc, fontsize=fs, fontweight="bold", linespacing=1.3)
+
+    def arr(x1, y1, x2, y2, color=GREY):
+        ax.add_patch(FancyArrowPatch((x1, y1), (x2, y2), arrowstyle="-|>", mutation_scale=16, lw=1.9, color=color))
+
+    def head(y, label, sub, color):
+        ax.text(0.3, y + 1.62, label, fontsize=13.5, fontweight="bold", color=color, va="center")
+        ax.text(0.3, y + 1.28, sub, fontsize=10.5, color=GREY, va="center", style="italic")
+
+    H = 0.95
+    X = [0.3, 3.2, 6.5, 11.2]
+    W = [2.2, 2.7, 4.0, 3.5]
+
+    # ---- A: as shipped
+    y = 7.0
+    head(y, "A.  SimuHome as shipped (the benchmark)", "the tool only confirms registration; nothing checks the request", RED)
+    for x, w, tx, c in zip(X, W, ["User request", "Agent LLM\n(ReAct)", "schedule_workflow", "Simulator\n(Matter devices)"], [GREY, NAVY, RED, GREY]):
+        bx(x, y, w, H, tx, c)
+    for i in range(3):
+        arr(X[i] + W[i], y + H / 2, X[i + 1], y + H / 2)
+    ax.text(8.5, y - 0.38, 'returns "registered" for any schedule  =>  contradiction blindness (85% of GPT-4.1 errors on infeasible QT4)',
+            ha="center", fontsize=10.5, color=RED, style="italic")
+
+    # ---- B: the paper's suggested future work
+    y = 4.2
+    head(y, "B.  SimuHome paper's suggested fix (Appendix L: future work, not implemented)", "simulation-based pre-validation: rehearse the whole plan in the simulator first", ORANGE)
+    for x, w, tx, c in zip(X, W, ["User request", "Agent LLM\n(ReAct)", "Run the plan in\nthe simulator", "Commit to\nthe real home"], [GREY, NAVY, ORANGE, GREY]):
+        bx(x, y, w, H, tx, c)
+    for i in range(3):
+        arr(X[i] + W[i], y + H / 2, X[i + 1], y + H / 2)
+    ax.text(8.5, y - 0.38, "needs a faithful world model and a full simulation per plan: heavier, and slower for the user",
+            ha="center", fontsize=10.5, color="#B9770E", style="italic")
+
+    # ---- C: ours
+    y = 1.5
+    head(y, "C.  Ours: request-level verifier in front of the tool", "check that the stated times are consistent BEFORE anything is scheduled", TEAL)
+    bx(X[0], y, W[0], H, "User request", GREY)
+    bx(X[1], y, W[1], H, "Agent LLM\n(ReAct)", NAVY)
+    ax.add_patch(FancyBboxPatch((X[2], y - 0.12), W[2], H + 0.24, boxstyle="round,pad=0.02,rounding_size=0.12", fc="#EAF4F2", ec=TEAL, lw=2, ls="--"))
+    ax.text(X[2] + W[2] / 2, y + H - 0.1, "Verifier", ha="center", va="center", fontsize=13, fontweight="bold", color=NAVY)
+    ax.text(X[2] + W[2] / 2, y + 0.33, "parser  ->  Z3  ->  reason", ha="center", va="center", fontsize=11, color=TEAL, fontweight="bold")
+    bx(X[3], y, W[3], H, "schedule_workflow\n+ simulator", GREY)
+    arr(X[0] + W[0], y + H / 2, X[1], y + H / 2)
+    arr(X[1] + W[1], y + H / 2, X[2] - 0.02, y + H / 2)
+    arr(X[2] + W[2], y + H / 2, X[3], y + H / 2, GREEN)
+    ax.text(X[2] + W[2] + 0.35, y + H / 2 + 0.28, "pass", ha="center", fontsize=9.5, color=GREEN, fontweight="bold")
+    # reject path: verifier -> back to the agent, routed below the row
+    rx, ry = X[2] + 1.2, y - 0.62
+    ax.plot([rx, rx], [y - 0.12, ry], color=RED, lw=1.9)
+    ax.plot([rx, X[1] + W[1] / 2], [ry, ry], color=RED, lw=1.9)
+    arr(X[1] + W[1] / 2, ry, X[1] + W[1] / 2, y - 0.01, RED)
+    ax.text((rx + X[1] + W[1] / 2) / 2, ry - 0.3, "contradiction: reject (409 + reason); the agent re-plans", ha="center", fontsize=10.5, color=RED, style="italic")
+
+    ax.text(7.5, -0.2, "We do not change the benchmark, retrain the agent or simulate execution:\n"
+            "we add a cheap, explainable consistency gate at the one place the tool accepts everything.",
+            ha="center", va="center", fontsize=10.5, color=NAVY, linespacing=1.4)
+    fig.savefig(os.path.join(HERE, "simuhome_vs_ours.png"), dpi=170, bbox_inches="tight", facecolor="white")
+
+
 if __name__ == "__main__":
-    architecture(); results(); print("wrote", HERE)
+    architecture(); results(); comparison(); print("wrote", HERE)
