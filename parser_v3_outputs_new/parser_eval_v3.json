@@ -1,0 +1,30 @@
+{
+  "Qwen/Qwen3-1.7B|val": {
+    "n": 25,
+    "valid": 25,
+    "exact": 12,
+    "verdict_ok": 24,
+    "verdict_n": 24,
+    "clock_dropped": 0,
+    "goals": 19,
+    "goals_ok": 18,
+    "goals_unmatched": 0,
+    "goals_refused": 1,
+    "targets_exact": 12,
+    "targets_n": 25
+  },
+  "Qwen/Qwen3-1.7B|test": {
+    "n": 54,
+    "valid": 54,
+    "exact": 33,
+    "verdict_ok": 47,
+    "verdict_n": 49,
+    "clock_dropped": 0,
+    "goals": 52,
+    "goals_ok": 49,
+    "goals_unmatched": 2,
+    "goals_refused": 1,
+    "targets_exact": 34,
+    "targets_n": 54
+  }
+}

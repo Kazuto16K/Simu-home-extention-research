@@ -1,0 +1,24 @@
+{
+  "Qwen/Qwen3-1.7B|val": {
+    "n": 25,
+    "valid": 24,
+    "exact": 7,
+    "verdict_ok": 21,
+    "verdict_n": 23,
+    "goals": 18,
+    "goals_inside": 14,
+    "targets_exact": 8,
+    "targets_n": 24
+  },
+  "Qwen/Qwen3-1.7B|test": {
+    "n": 54,
+    "valid": 54,
+    "exact": 18,
+    "verdict_ok": 44,
+    "verdict_n": 49,
+    "goals": 47,
+    "goals_inside": 38,
+    "targets_exact": 22,
+    "targets_n": 54
+  }
+}

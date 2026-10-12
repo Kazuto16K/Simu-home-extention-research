@@ -1,0 +1,60 @@
+{
+  "Qwen/Qwen3-1.7B": [
+    {
+      "query": "I am at my desk finishing a report and want to cut the glare, move living room blinds 1 to 80.0% closed 11 minutes from now and adjust it to 65.0% closed 19 minutes after the previous action. I will start cooking and do not want smells in my work area, turn on kitchen fan 1 power on and set fan 30% 20 minutes from now and increase it to fan 50% 23 minutes after the previous action.",
+      "why": "goal 1: benchmark time outside the predicted window (would be refused)"
+    },
+    {
+      "query": "I am at my desk finishing a report and want to cut the glare, move living room blinds 1 to 80.0% closed 11 minutes from now and adjust it to 65.0% closed 19 minutes after the previous action. I will start cooking and do not want smells in my work area, turn on kitchen fan 1 power on and set fan 30% 20 minutes from now and increase it to fan 50% 23 minutes after the previous action.",
+      "why": "goal 2: benchmark time outside the predicted window (would be refused)"
+    },
+    {
+      "query": "Finishing up at the kitchen counter and juggling plates, set dimmer light 1 in the living room to power on and level 60 at 15 minutes from now and bump it to power on and level 100 at 23 minutes after the previous action. Also the dining room feels a bit muggy from cooking so switch on dehumidifier 1 in the dining room to power on and fan 60% at 26 minutes from now and nudge it to power on and fan 40% at 25 minutes after the previous action.",
+      "why": "goal 1: benchmark time outside the predicted window (would be refused)"
+    },
+    {
+      "query": "Finishing up at the kitchen counter and juggling plates, set dimmer light 1 in the living room to power on and level 60 at 15 minutes from now and bump it to power on and level 100 at 23 minutes after the previous action. Also the dining room feels a bit muggy from cooking so switch on dehumidifier 1 in the dining room to power on and fan 60% at 26 minutes from now and nudge it to power on and fan 40% at 25 minutes after the previous action.",
+      "why": "goal 2: benchmark time outside the predicted window (would be refused)"
+    },
+    {
+      "query": "I am folding a pile of damp towels over here and want the lights timed so I do not keep running between rooms. Put dimmer light 1 in the utility room on at 70% 5 minutes from now, and 24 minutes after the previous action bring it down to 60%. Also switch on light 1 in the kitchen 11 minutes from now so the countertop is lit when I pop in to check the timer.",
+      "why": "goal 1: benchmark time outside the predicted window (would be refused)"
+    },
+    {
+      "query": "I am folding a pile of damp towels over here and want the lights timed so I do not keep running between rooms. Put dimmer light 1 in the utility room on at 70% 5 minutes from now, and 24 minutes after the previous action bring it down to 60%. Also switch on light 1 in the kitchen 11 minutes from now so the countertop is lit when I pop in to check the timer.",
+      "why": "goal 2: benchmark time outside the predicted window (would be refused)"
+    },
+    {
+      "query": "Quick thing while I am at my desk finishing a report. Power up dimmer light 1 in bathroom to level 70 13 minutes from now and drop it to level 20 7 minutes after the previous action so it is bright for a quick rinse and then gentle for winding down. Gently lower blinds 1 in kitchen to 60.0% closed 15 minutes from now and ease them to 50.0% closed 5 minutes after the previous action to cut the glare on the counter while I wrap up here at my desk",
+      "why": "goal 1: benchmark time outside the predicted window (would be refused)"
+    },
+    {
+      "query": "Quick thing while I am at my desk finishing a report. Power up dimmer light 1 in bathroom to level 70 13 minutes from now and drop it to level 20 7 minutes after the previous action so it is bright for a quick rinse and then gentle for winding down. Gently lower blinds 1 in kitchen to 60.0% closed 15 minutes from now and ease them to 50.0% closed 5 minutes after the previous action to cut the glare on the counter while I wrap up here at my desk",
+      "why": "goal 2: benchmark time outside the predicted window (would be refused)"
+    },
+    {
+      "query": "I'm lounging on the couch reading and want to time things so I can grab a snack and then focus on work, turn on kitchen light 1 25 minutes from now so the kitchen is ready when I get up. Also my office gets stuffy in the afternoon so get office AC 1 cooling with the fan at 60% 30 minutes from now and 27 minutes after the previous action keep it in cooling and ease the fan down to 50% so it's quieter while I concentrate",
+      "why": "goal 2: benchmark time outside the predicted window (would be refused)"
+    },
+    {
+      "query": "Getting ready to fold the laundry, 8 minutes after the dryer 1 in the utility room finishes, fully open blinds 1 in the utility room and power on light 1 in the utility room.",
+      "why": "wrong verdict: predicted infeasible"
+    },
+    {
+      "query": "I have a video call in 20 minutes and I need the house quiet when it starts. Start robot vacuum 1 in the office at the right time in Running state. Time it so dishwasher 1 in the kitchen and robot vacuum 1 in the office finish together and have robot vacuum 1 end in Stopped state.",
+      "why": "wrong verdict: predicted infeasible"
+    },
+    {
+      "query": "Dinner's on and the kids are loud so start washer 1 in the bathroom on Heavy Whites mode now. When washer 1 in the utility room finishes pause washer 1 in the bathroom.",
+      "why": "wrong verdict: predicted infeasible"
+    },
+    {
+      "query": "Running late and juggling dinner and laundry so start and get dishwasher 1 in the kitchen going now and run it, then pause dishwasher 1 exactly when dryer 2 in the bathroom finishes.",
+      "why": "wrong verdict: predicted infeasible"
+    },
+    {
+      "query": "Start dryer 1 in the utility room at six fifty six PM on Normal dryness level. Pause dryer 1 when dryer 2 in the utility room finishes to avoid tripping the circuit and to have each load ready for folding.",
+      "why": "wrong verdict: predicted feasible"
+    }
+  ]
+}

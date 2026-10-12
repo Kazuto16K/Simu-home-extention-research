@@ -1,0 +1,10 @@
+{
+  "run_id": "a2_baseline_qt4_3_feasible",
+  "model": "google/gemma-4-31b-it",
+  "workers": 6,
+  "total": 9,
+  "skipped": 0,
+  "success": 9,
+  "failed": 0,
+  "seconds": 470.6
+}

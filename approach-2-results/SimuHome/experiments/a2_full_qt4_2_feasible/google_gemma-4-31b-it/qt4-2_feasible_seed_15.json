@@ -1,0 +1,22 @@
+{
+  "seed": 15,
+  "query_type": "qt4-2",
+  "case": "feasible",
+  "model": "google/gemma-4-31b-it",
+  "strategy": "react",
+  "config_path": "/kaggle/working/SimuHome/data/benchmark/qt4-2_feasible_seed_15.json",
+  "query": "I'm going to fold laundry in the utility room. 6 minutes before the dishwasher 1 in the kitchen finishes, power on AC 1 in the living room and set it to cooling and fan 80 percent and power on dimmer light 1 in the utility room plus set level 50",
+  "duration": 0.0,
+  "evaluation_result": {
+    "score": 0,
+    "error_type": "Model Output Format Error",
+    "error_category": "model",
+    "attempted": true,
+    "required_actions": [],
+    "judge": [],
+    "detail": "Episode failed: reached 3 consecutive failures (invalid structured output)."
+  },
+  "tools_invoked": [],
+  "steps": [],
+  "trace_type": "react"
+}

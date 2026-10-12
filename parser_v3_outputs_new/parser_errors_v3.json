@@ -1,0 +1,16 @@
+{
+  "Qwen/Qwen3-1.7B": [
+    {
+      "query": "Finishing up at the kitchen counter and juggling plates, set dimmer light 1 in the living room to power on and level 60 at 15 minutes from now and bump it to power on and level 100 at 23 minutes after the previous action. Also the dining room feels a bit muggy from cooking so switch on dehumidifier 1 in the dining room to power on and fan 60% at 26 minutes from now and nudge it to power on and fan 40% at 25 minutes after the previous action.",
+      "why": "goal 2: a CORRECT schedule would be refused by the time check"
+    },
+    {
+      "query": "I am tucking the kids into bed and need a quick setup. Turn on living room light 1 in 6 minutes from now so the living room is softly lit when we come out, and cool the kitchen refrigerator 1 down to 1.0°C 8 minutes after the previous action so the milk is extra cold for a late snack",
+      "why": "wrong verdict: predicted infeasible"
+    },
+    {
+      "query": "I will be folding right after the laundry ends and I want the utility room ready with natural light and ventilation. At 12:26 PM, which is exactly 8 minutes after dryer 1 in the utility room finishes, open blinds 1 in the utility room all the way and turn on light 1 in the utility room so the space is bright and ready for folding.",
+      "why": "wrong verdict: predicted feasible"
+    }
+  ]
+}

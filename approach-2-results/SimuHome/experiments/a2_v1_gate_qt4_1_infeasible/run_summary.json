@@ -1,0 +1,10 @@
+{
+  "run_id": "a2_v1_gate_qt4_1_infeasible",
+  "model": "google/gemma-4-31b-it",
+  "workers": 6,
+  "total": 10,
+  "skipped": 0,
+  "success": 10,
+  "failed": 0,
+  "seconds": 1827.5
+}

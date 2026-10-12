@@ -1,0 +1,22 @@
+{
+  "seed": 70,
+  "query_type": "qt4-3",
+  "case": "infeasible",
+  "model": "google/gemma-4-31b-it",
+  "strategy": "react",
+  "config_path": "/kaggle/working/SimuHome/data/benchmark/qt4-3_infeasible_seed_70.json",
+  "query": "Start dishwasher 1 in the kitchen soon so it finishes at the same time as washer 1 in the utility room. I need both finished together so I can leave on time and unload everything at once.",
+  "duration": 0.0,
+  "evaluation_result": {
+    "score": -1,
+    "error_type": "Evaluation Runtime Error",
+    "error_category": "infra",
+    "attempted": false,
+    "required_actions": [],
+    "judge": [],
+    "detail": "Episode failed: explicit finish action is required."
+  },
+  "tools_invoked": [],
+  "steps": [],
+  "trace_type": "react"
+}
