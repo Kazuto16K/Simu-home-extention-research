@@ -1,0 +1,682 @@
+{
+ "tally": {
+  "episodes": 64,
+  "calls": 151,
+  "refusals_in_failed_episodes": 47,
+  "episodes_with_refusal_failed": 23,
+  "failed_episodes": 42,
+  "blocking_refusals_in_failed_episodes": 20,
+  "refusals_in_success_episodes": 2,
+  "episodes_with_refusal_success": 1,
+  "success_episodes": 22,
+  "blocking_refusals_in_success_episodes": 0,
+  "kind:WORKFLOW_STEP_WOULD_FAIL|failed": 29,
+  "kind:TEMPORAL_CONTRADICTION_IN_REQUEST|failed": 4,
+  "kind:WORKFLOW_WOULD_CHANGE_NOTHING|failed": 12,
+  "kind:START_TIME_DOES_NOT_MATCH_REQUEST|failed": 2,
+  "kind:WORKFLOW_STEP_WOULD_FAIL|success": 2
+ },
+ "rows": [
+  {
+   "arm": "a2_baseline_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_10",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "ok",
+    "ok",
+    "ok",
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_baseline_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_15",
+   "score": 1,
+   "preflight": "sat",
+   "decisions": [
+    "ok",
+    "ok",
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_baseline_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_20",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "WORKFLOW_STEP_WOULD_FAIL",
+    "WORKFLOW_STEP_WOULD_FAIL",
+    "ok",
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_baseline_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_25",
+   "score": 0,
+   "preflight": "unsat",
+   "decisions": [
+    "TEMPORAL_CONTRADICTION_IN_REQUEST"
+   ]
+  },
+  {
+   "arm": "a2_baseline_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_30",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "WORKFLOW_STEP_WOULD_FAIL",
+    "ok",
+    "WORKFLOW_STEP_WOULD_FAIL"
+   ]
+  },
+  {
+   "arm": "a2_baseline_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_35",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "WORKFLOW_STEP_WOULD_FAIL",
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_baseline_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_40",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_baseline_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_45",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "WORKFLOW_STEP_WOULD_FAIL",
+    "WORKFLOW_STEP_WOULD_FAIL",
+    "WORKFLOW_WOULD_CHANGE_NOTHING",
+    "WORKFLOW_WOULD_CHANGE_NOTHING"
+   ]
+  },
+  {
+   "arm": "a2_baseline_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_5",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "ok",
+    "ok",
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_baseline_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_50",
+   "score": 1,
+   "preflight": "sat",
+   "decisions": [
+    "ok",
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_baseline_qt4_2_feasible",
+   "episode": "qt4-2_feasible_seed_15",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "WORKFLOW_STEP_WOULD_FAIL"
+   ]
+  },
+  {
+   "arm": "a2_baseline_qt4_2_feasible",
+   "episode": "qt4-2_feasible_seed_20",
+   "score": 1,
+   "preflight": "sat",
+   "decisions": [
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_baseline_qt4_2_feasible",
+   "episode": "qt4-2_feasible_seed_30",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "WORKFLOW_STEP_WOULD_FAIL"
+   ]
+  },
+  {
+   "arm": "a2_baseline_qt4_2_feasible",
+   "episode": "qt4-2_feasible_seed_35",
+   "score": 1,
+   "preflight": "sat",
+   "decisions": [
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_baseline_qt4_2_feasible",
+   "episode": "qt4-2_feasible_seed_45",
+   "score": 1,
+   "preflight": "sat",
+   "decisions": [
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_baseline_qt4_2_feasible",
+   "episode": "qt4-2_feasible_seed_50",
+   "score": 1,
+   "preflight": "sat",
+   "decisions": [
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_baseline_qt4_2_feasible",
+   "episode": "qt4-2_feasible_seed_55",
+   "score": 1,
+   "preflight": "sat",
+   "decisions": [
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_baseline_qt4_2_feasible",
+   "episode": "qt4-2_feasible_seed_60",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "WORKFLOW_STEP_WOULD_FAIL"
+   ]
+  },
+  {
+   "arm": "a2_baseline_qt4_3_feasible",
+   "episode": "qt4-3_feasible_seed_20",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_baseline_qt4_3_feasible",
+   "episode": "qt4-3_feasible_seed_30",
+   "score": 1,
+   "preflight": "sat",
+   "decisions": [
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_baseline_qt4_3_feasible",
+   "episode": "qt4-3_feasible_seed_35",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "WORKFLOW_STEP_WOULD_FAIL"
+   ]
+  },
+  {
+   "arm": "a2_baseline_qt4_3_feasible",
+   "episode": "qt4-3_feasible_seed_45",
+   "score": 1,
+   "preflight": "sat",
+   "decisions": [
+    "replay_error:TypeError",
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_baseline_qt4_3_feasible",
+   "episode": "qt4-3_feasible_seed_50",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "WORKFLOW_WOULD_CHANGE_NOTHING"
+   ]
+  },
+  {
+   "arm": "a2_baseline_qt4_3_feasible",
+   "episode": "qt4-3_feasible_seed_55",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "replay_error:TypeError",
+    "WORKFLOW_WOULD_CHANGE_NOTHING"
+   ]
+  },
+  {
+   "arm": "a2_baseline_qt4_3_feasible",
+   "episode": "qt4-3_feasible_seed_70",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_baseline_qt4_3_feasible",
+   "episode": "qt4-3_feasible_seed_75",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_baseline_qt4_3_feasible",
+   "episode": "qt4-3_feasible_seed_80",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "replay_error:TypeError",
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_full_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_10",
+   "score": 1,
+   "preflight": "sat",
+   "decisions": [
+    "ok",
+    "ok",
+    "ok",
+    "ok",
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_full_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_15",
+   "score": 1,
+   "preflight": "sat",
+   "decisions": [
+    "ok",
+    "ok",
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_full_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_20",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "WORKFLOW_STEP_WOULD_FAIL",
+    "WORKFLOW_STEP_WOULD_FAIL",
+    "ok",
+    "WORKFLOW_WOULD_CHANGE_NOTHING",
+    "ok",
+    "ok",
+    "ok",
+    "START_TIME_DOES_NOT_MATCH_REQUEST",
+    "START_TIME_DOES_NOT_MATCH_REQUEST"
+   ]
+  },
+  {
+   "arm": "a2_full_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_25",
+   "score": 0,
+   "preflight": "not_run",
+   "decisions": []
+  },
+  {
+   "arm": "a2_full_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_30",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "WORKFLOW_STEP_WOULD_FAIL",
+    "WORKFLOW_STEP_WOULD_FAIL",
+    "ok",
+    "ok",
+    "ok",
+    "ok",
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_full_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_35",
+   "score": 1,
+   "preflight": "sat",
+   "decisions": [
+    "WORKFLOW_STEP_WOULD_FAIL",
+    "WORKFLOW_STEP_WOULD_FAIL",
+    "ok",
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_full_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_40",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_full_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_45",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "WORKFLOW_STEP_WOULD_FAIL",
+    "WORKFLOW_STEP_WOULD_FAIL",
+    "ok",
+    "WORKFLOW_WOULD_CHANGE_NOTHING",
+    "WORKFLOW_WOULD_CHANGE_NOTHING",
+    "ok",
+    "ok",
+    "ok",
+    "ok",
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_full_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_5",
+   "score": 1,
+   "preflight": "sat",
+   "decisions": [
+    "ok",
+    "ok",
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_full_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_50",
+   "score": 1,
+   "preflight": "sat",
+   "decisions": [
+    "ok",
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_full_qt4_2_feasible",
+   "episode": "qt4-2_feasible_seed_15",
+   "score": 0,
+   "preflight": "not_run",
+   "decisions": []
+  },
+  {
+   "arm": "a2_full_qt4_2_feasible",
+   "episode": "qt4-2_feasible_seed_20",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "ok",
+    "WORKFLOW_STEP_WOULD_FAIL",
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_full_qt4_2_feasible",
+   "episode": "qt4-2_feasible_seed_30",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "WORKFLOW_STEP_WOULD_FAIL",
+    "WORKFLOW_STEP_WOULD_FAIL",
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_full_qt4_2_feasible",
+   "episode": "qt4-2_feasible_seed_35",
+   "score": 1,
+   "preflight": "sat",
+   "decisions": [
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_full_qt4_2_feasible",
+   "episode": "qt4-2_feasible_seed_45",
+   "score": 1,
+   "preflight": "sat",
+   "decisions": [
+    "ok",
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_full_qt4_2_feasible",
+   "episode": "qt4-2_feasible_seed_50",
+   "score": 1,
+   "preflight": "sat",
+   "decisions": [
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_full_qt4_2_feasible",
+   "episode": "qt4-2_feasible_seed_55",
+   "score": 1,
+   "preflight": "sat",
+   "decisions": [
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_full_qt4_2_feasible",
+   "episode": "qt4-2_feasible_seed_60",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "WORKFLOW_STEP_WOULD_FAIL",
+    "WORKFLOW_STEP_WOULD_FAIL",
+    "WORKFLOW_WOULD_CHANGE_NOTHING",
+    "WORKFLOW_WOULD_CHANGE_NOTHING",
+    "ok",
+    "ok",
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_full_qt4_3_feasible",
+   "episode": "qt4-3_feasible_seed_20",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_full_qt4_3_feasible",
+   "episode": "qt4-3_feasible_seed_30",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_full_qt4_3_feasible",
+   "episode": "qt4-3_feasible_seed_35",
+   "score": 0,
+   "preflight": "not_run",
+   "decisions": [
+    "replay_error:TypeError",
+    "replay_error:TypeError"
+   ]
+  },
+  {
+   "arm": "a2_full_qt4_3_feasible",
+   "episode": "qt4-3_feasible_seed_45",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "WORKFLOW_WOULD_CHANGE_NOTHING"
+   ]
+  },
+  {
+   "arm": "a2_full_qt4_3_feasible",
+   "episode": "qt4-3_feasible_seed_50",
+   "score": 1,
+   "preflight": "sat",
+   "decisions": [
+    "replay_error:TypeError",
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_full_qt4_3_feasible",
+   "episode": "qt4-3_feasible_seed_55",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "replay_error:TypeError",
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_full_qt4_3_feasible",
+   "episode": "qt4-3_feasible_seed_70",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_full_qt4_3_feasible",
+   "episode": "qt4-3_feasible_seed_75",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_full_qt4_3_feasible",
+   "episode": "qt4-3_feasible_seed_80",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "replay_error:TypeError",
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_v1_gate_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_10",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "ok",
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_v1_gate_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_15",
+   "score": 1,
+   "preflight": "sat",
+   "decisions": [
+    "ok",
+    "ok",
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_v1_gate_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_20",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "WORKFLOW_STEP_WOULD_FAIL",
+    "WORKFLOW_STEP_WOULD_FAIL",
+    "ok",
+    "WORKFLOW_WOULD_CHANGE_NOTHING"
+   ]
+  },
+  {
+   "arm": "a2_v1_gate_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_25",
+   "score": 0,
+   "preflight": "unsat",
+   "decisions": [
+    "TEMPORAL_CONTRADICTION_IN_REQUEST",
+    "TEMPORAL_CONTRADICTION_IN_REQUEST",
+    "TEMPORAL_CONTRADICTION_IN_REQUEST",
+    "ok",
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_v1_gate_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_30",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "WORKFLOW_STEP_WOULD_FAIL",
+    "ok",
+    "WORKFLOW_STEP_WOULD_FAIL"
+   ]
+  },
+  {
+   "arm": "a2_v1_gate_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_35",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "http400",
+    "WORKFLOW_STEP_WOULD_FAIL",
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_v1_gate_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_40",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_v1_gate_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_45",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "WORKFLOW_STEP_WOULD_FAIL",
+    "WORKFLOW_STEP_WOULD_FAIL",
+    "WORKFLOW_WOULD_CHANGE_NOTHING"
+   ]
+  },
+  {
+   "arm": "a2_v1_gate_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_5",
+   "score": 1,
+   "preflight": "sat",
+   "decisions": [
+    "ok",
+    "ok",
+    "ok"
+   ]
+  },
+  {
+   "arm": "a2_v1_gate_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_50",
+   "score": 1,
+   "preflight": "sat",
+   "decisions": [
+    "ok",
+    "ok"
+   ]
+  }
+ ]
+}

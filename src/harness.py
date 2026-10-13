@@ -115,9 +115,17 @@ class Harness:
                 action, text = gate.preflight_action()
                 if action == "answer":
                     record["answered_by_gate"] = True
-                    step = self._AgentStep(step=1, thought="Answered by the scheduling verifier before the agent ran.",
-                                           action="finish", action_input={"answer": text}, observation=None)
-                    return self._AgentResult(steps=[step], tool_calls=[], final_answer=text, raw_responses=[], events=[])
+                    # F2: the readings the verdict rests on (real tool calls the gate made) come first,
+                    # then the reply. They are not added to tool_calls: the agent did not make them.
+                    steps = [self._AgentStep(step=i + 1, thought=e["thought"], action=e["action"],
+                                             action_input=e["action_input"], observation=e["observation"])
+                             for i, e in enumerate(gate.evidence_steps())]
+                    steps.append(self._AgentStep(
+                        step=len(steps) + 1,
+                        thought="Scheduling verifier: the stated times contradict each other, so nothing is scheduled; "
+                                "replying to the user with the times.",
+                        action="finish", action_input={"answer": text}, observation=None))
+                    return self._AgentResult(steps=steps, tool_calls=[], final_answer=text, raw_responses=[], events=[])
                 if action == "hint":
                     query = query + text
             if arm == "selfcheck":

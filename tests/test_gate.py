@@ -10,8 +10,9 @@ Checks, over all 300 QT4 episodes:
   1. pre-flight verdict == benchmark label, with device anchors read LIVE from the
      simulator (CountdownTime), not from the answer key;
   2. feasible: a call at the benchmark's own goal time is never refused (0 false
-     time rejections); a call 5 minutes off is refused whenever the goal's window is
-     bounded;
+     time rejections); a call 5 minutes after the last goal on that device is refused
+     whenever the window is bounded (earlier calls may legitimately serve a later goal,
+     because SimuHome scores the state at each goal's time);
   3. infeasible: schedule_workflow is refused with the final-rejection message,
      and the gate fails open after max_unsat_rejections;
   4. dry run: a valid light command passes, an invented command is refused with
@@ -107,7 +108,12 @@ def main(simuhome_dir: str) -> int:
             dev = raw_goal["targets"][0]["device_id"]
             steps = [{"tool": "execute_command", "args": {"device_id": dev}}]
             # A fresh gate per call keeps the two probes independent of each other.
-            for shift, key in ((0.0, "gold"), (5.0, "off")):
+            # "off" probe: 5 min after the LAST window on this device, i.e. too late for every goal on it.
+            # (SimuHome scores the state at the goal time, so an earlier call may legitimately serve a later
+            # goal on the same device; only a call late for all of them is certainly wrong.)
+            last_same_dev = max(float(g2["when"]["at_tick"]) * tick / 60.0 for g2 in episode["eval"]["goals"]
+                                if any(t["device_id"] == dev for t in g2["targets"]))
+            for shift, key in ((0.0, "gold"), (last_same_dev - gold_min + 5.0, "off")):
                 g2 = EpisodeGate(episode["query"], base, pair["ir_for_training"], time_cfg, call_tool)
                 g2.ensure_verdict()
                 w = g2.windows.get(gi)
@@ -176,7 +182,7 @@ def main(simuhome_dir: str) -> int:
     print(json.dumps(c, indent=2))
     print(f"pre-flight verdicts (live anchors): {c['verdict_ok']}/{c['verdict_n']}")
     print(f"feasible, call at the gold time: {c['gold_refused']}/{c['gold_calls']} refused (must be 0)")
-    print(f"feasible, call 5 min off (bounded windows): {c['off_refused']}/{c['off_calls']} refused "
+    print(f"feasible, call 5 min after the device's last goal (bounded): {c['off_refused']}/{c['off_calls']} refused "
           f"(+{c['off_other_goal']} that land in another goal's window on the same device, correctly passed)")
     print(f"infeasible, final rejection: {c['unsat_refused']}/{c['unsat_n']}")
     print(f"fail-open cap after 2 rejections: {'ok' if cap_ok else 'WRONG'}")

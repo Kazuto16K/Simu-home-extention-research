@@ -144,3 +144,22 @@ time).
 - The joint encoding answers approach 1's weak point ("Z3 is one-line arithmetic"): goal
   chains, shared anchors and deadlines need simultaneous constraints and windows, not one
   subtraction. Still report the honest ablation (Z3 vs a hand-written checker) on QT4.
+
+## 8. Gate v2.1 (after E1 session 1)
+
+Session-1 traces (`docs/FINDINGS.md`) showed four problems; v2.1 fixes them. Gate-arm runs are
+tagged `_g21` (run ids) and `@2.1` (summary keys) so they never mix with v2.0 results.
+
+| Fix | Change | Where |
+|---|---|---|
+| F1 | Plain-language explanations: devices named in words, each device's finish time and timer reading spelled out, each statement's resulting time given; no "goal 1" | `src/explain.py` |
+| F2 | Evidence: SimuHome's QT4-2/3 judges see only the agent's thoughts and final answer, and require the anchor's CountdownTime. Answer mode records the gate's real timer readings as steps (with thoughts) before the reply; hint mode asks the agent to read the timer itself and quote the finish time | `gate.evidence_steps`, `harness.py`, `explain.agent_hint` |
+| F3 | A schedule call is matched to the goal whose target values the call **changes** on the copy of the house (compared with an identical copy without the call), not the goal nearest in time. Only used when the dry run completed and changed something | `gate.on_schedule`, `shadow_sim.dry_run(check_effect=True)` |
+| F4 | A workflow that changes nothing on the copy is refused (e.g. pausing a washer that never started), unless every value of some goal already holds (a redundant call is harmless) | same |
+
+Order inside `on_schedule` (v2.1): request impossible? -> dry run (step failures refused) ->
+match by effect -> no-effect refusal -> time window of the matched goal -> target note.
+
+Tests: `tests/test_fixes_v21.py` reproduces QT4-3 seeds 45 (no-effect) and 30 (pause 1 min
+early) on real homes; `tests/replay_traces.py` replays every real scheduling call from an E1
+session through the gate to count refusals in episodes SimuHome scored as success.

@@ -190,6 +190,17 @@ request asks running").
 commands actually produce (a pause matches the "paused" goal), not to whichever goal is
 closest in time.
 
+> **Correction (13 Oct, found while implementing the fix).** The early pause was *not* why
+> seed 30 failed. SimuHome scores a goal as met if the requested state holds at **any moment
+> within +/-30 s of the goal time**; it never checks when the action happened. A pause one
+> minute early still leaves the dryer paused at the check time, so it passes (the baseline run
+> of this episode did exactly that and succeeded). The `full` run failed for another reason
+> (most likely the dryness level it wrote). The matching flaw is still real (the dry-run note
+> compared against the wrong goal), so the fix stays, but the time check was also changed to
+> follow SimuHome's definition of success: a call is refused only if it is **too late** (after
+> its goal's window) or so **early that it would overwrite an earlier goal** on the same
+> device. See section 9.
+
 ### Finding 10. Smaller observations
 
 - The one error (QT4-3 answer mode, seed 70) is the agent never calling `finish` within 20
@@ -275,3 +286,47 @@ PLAN = [
 | `approach-2-results/gate_telemetry.json` | per episode: gate verdict, every refusal, warnings, device-name repairs, timings |
 | `results/e1_session1_analysis.md` | the short technical version of this document |
 | `results/parser_v3.0_analysis.md` | how the parser was checked and improved (v3.0 to v3.1) |
+
+---
+
+## 9. Update (13 Oct): fixes F1-F4 implemented as gate v2.1
+
+All four fixes are in the code (`src/explain.py`, `src/gate.py`, `src/shadow_sim.py`,
+`src/harness.py`). Gate runs are now saved with a version tag (`..._g21`) so they never mix
+with the session-1 results above.
+
+**One more change, found while testing:** SimuHome scores a goal as met if the requested
+state holds at any moment within +/-30 s of the goal time, and never checks when the action
+happened (see the correction under Finding 9). The time check now follows that definition: a
+scheduling call is refused only if it is too late (after its goal's window) or so early that
+it would overwrite an earlier goal on the same device.
+
+### How v2.1 was checked before spending any API calls
+
+| Check | Result |
+|---|---|
+| Joint Z3 verdicts / goal times inside windows (gold labels) | 286/286, 301/301 |
+| Gate on all 300 episodes with live device timers: correct times refused | 0 of 301 |
+| Calls 5 min after a device's last goal refused | 251 of 251 |
+| QT4-3 seed 45 (washer never started, then paused) | refused: "would change nothing" (F4); correct order passes |
+| QT4-3 seed 30 (pause): 1 min early / on time / 1.5 min late | passes / passes / refused |
+| Answer-mode trace (what the judge sees) | contains the timer reading and the true finish time |
+| **Replay of all 151 real scheduling calls from session 1** (64 possible-request episodes, real parser output, real simulator) | **0 correct schedules blocked**; mistakes flagged in **23 of 42 failed episodes** (29 failing commands, 12 do-nothing workflows, 4 calls on impossible requests, 2 too-late times) |
+
+Before the timing change, the same replay showed the gate would have wrongly blocked 3
+successful QT4-3 episodes; that is why the change was made.
+
+What the replay cannot show: whether the agent, once refused, would have fixed its mistake.
+That needs the new E1 run (`notebooks/00_approach2_pipeline.ipynb`, plan parts A and B).
+Replay data: `approach-2-results/replay_gate_v21.json`; script: `tests/replay_traces.py`.
+
+### Does this work for any home?
+
+The method is not tied to one house: every SimuHome episode is a different, randomly
+generated home, and all results are on homes the parser never saw. But the evidence is so far
+only SimuHome. The Z3 check, time windows and safeguards work on any device list; reading
+finish times needs devices that report remaining time (Matter's CountdownTime); the dry run
+needs a simulator of the home (exact here, approximate in a real home); and the small model
+was trained only on SimuHome's template-generated requests. For a claim beyond "SimuHome's
+generated homes", the paper needs a rephrasing test (an LLM rewords the test requests) and
+fresh homes from SimuHome's generator with unseen seeds.

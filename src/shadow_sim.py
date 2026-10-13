@@ -43,6 +43,15 @@ class DryRunResult:
     error: Optional[str] = None
     target_mismatches: list[TargetMismatch] = field(default_factory=list)
     seconds: float = 0.0
+    # (device_id, "1.Cluster.Attribute") -> value right after the workflow ran (for every expected target)
+    observed: dict = field(default_factory=dict)
+    # True if the workflow changed nothing on the devices it touches (compared with an identical copy
+    # of the house where it is not scheduled); None if not checked
+    no_effect: Optional[bool] = None
+    # the touched devices' state at that moment, for the refusal message
+    device_states: dict = field(default_factory=dict)
+    # same keys as `observed`, on the twin copy WITHOUT the workflow (only when check_effect)
+    observed_without: dict = field(default_factory=dict)
 
 
 def _split_attribute(path: str) -> tuple[int, str, str]:
@@ -68,11 +77,43 @@ def build_shadow_home(snapshot: dict):
     return home
 
 
+_STATE_ATTRS = ("1.OnOff.OnOff", "1.OperationalState.OperationalState", "1.LevelControl.CurrentLevel",
+                "1.FanControl.PercentSetting")
+
+
+def _touched_devices(steps: list) -> list[str]:
+    out = []
+    for st in steps or []:
+        dev = (st.get("args") or {}).get("device_id") if isinstance(st, dict) else None
+        if isinstance(dev, str) and dev not in out:
+            out.append(dev)
+    return out
+
+
+def _device_attrs(home, device_id: str):
+    got = home._get_all_attributes(device_id)  # noqa: SLF001
+    return got.data if got.success else None
+
+
+def _readable_state(home, device_id: str) -> dict:
+    out = {}
+    for path in _STATE_ATTRS:
+        try:
+            endpoint, cluster, attribute = _split_attribute(path)
+            got = home._get_attribute(device_id, endpoint, cluster, attribute)  # noqa: SLF001
+            if got.success and got.data is not None:
+                out[f"{cluster}.{attribute}"] = got.data
+        except Exception:
+            pass
+    return out
+
+
 def dry_run(
     snapshot: dict,
     candidate: dict,
     committed: Optional[list[dict]] = None,
     expected_targets: Optional[list[tuple[str, str, Any]]] = None,
+    check_effect: bool = False,
 ) -> DryRunResult:
     """Run `candidate` = {"start_time", "steps"} on a copy of the home.
 
@@ -100,7 +141,7 @@ def dry_run(
     if not ff.success:
         return DryRunResult(ok=False, status="error", error=f"fast-forward failed: {ff.error_message}", seconds=time.time() - t0)
 
-    mismatches = []
+    mismatches, observed = [], {}
     for device_id, attr_path, expected in expected_targets or []:
         try:
             endpoint, cluster, attribute = _split_attribute(attr_path)
@@ -108,8 +149,28 @@ def dry_run(
             actual = got.data if got.success else None
         except Exception:
             actual = None
+        observed[(device_id, attr_path)] = actual
         if not values_match(expected, actual):
             mismatches.append(TargetMismatch(device_id, attr_path, expected, actual))
+
+    touched = _touched_devices(candidate.get("steps"))
+    no_effect, states, observed_without = None, {}, {}
+    if check_effect and touched:
+        # Same copy of the house and the same moment, but WITHOUT the candidate workflow: if every touched
+        # device ends up identical, the workflow does nothing (e.g. pausing a washer that is not running).
+        try:
+            twin = build_shadow_home(snapshot)
+            for wf2 in committed or []:
+                twin.schedule_workflow(wf2["start_time"], wf2["steps"])
+            twin._fast_forward_to(int(wf["due_tick"]) + 1)  # noqa: SLF001
+            no_effect = all(_device_attrs(home, d) == _device_attrs(twin, d) for d in touched)
+            states = {d: _readable_state(home, d) for d in touched}
+            for device_id, attr_path, _ in expected_targets or []:
+                endpoint, cluster, attribute = _split_attribute(attr_path)
+                got = twin._get_attribute(device_id, endpoint, cluster, attribute)  # noqa: SLF001
+                observed_without[(device_id, attr_path)] = got.data if got.success else None
+        except Exception:
+            no_effect = None
 
     status = wf.get("status", "pending")
     return DryRunResult(
@@ -118,4 +179,8 @@ def dry_run(
         error=wf.get("error"),
         target_mismatches=mismatches,
         seconds=time.time() - t0,
+        observed=observed,
+        no_effect=no_effect,
+        device_states=states,
+        observed_without=observed_without,
     )
