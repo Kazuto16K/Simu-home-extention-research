@@ -330,3 +330,84 @@ needs a simulator of the home (exact here, approximate in a real home); and the 
 was trained only on SimuHome's template-generated requests. For a claim beyond "SimuHome's
 generated homes", the paper needs a rephrasing test (an LLM rewords the test requests) and
 fresh homes from SimuHome's generator with unseen seeds.
+
+## 10. Update (15 Oct): session 2 traces, why possible requests fail, and gate v2.2
+
+### What session 2 (gate v2.1) showed
+
+| | Agent alone (s1) | Self-check | Gate hint v2.1 | Gate answer v2.1 |
+|---|---|---|---|---|
+| Impossible QT4-1 | 4/10 | 10/10 (s1) | 10/10, 1.0 calls | 10/10, **0 calls** |
+| Impossible QT4-2 | 0/8 | 8/8 (s1) | 8/8, 2.0 calls | 8/8, **0 calls** |
+| Impossible QT4-3 | 4/9 | 5/9 (s1) | 4/9 | 4/9 (the in-scope maximum) |
+| Possible QT4-1 | 2/10 | 3/10 | full: **2/10** (v2.0: 5/10) | |
+| Possible QT4-2 / QT4-3 | 5/8, 2/9 | 4/8, 0/9 | not run (time budget) | |
+
+The v2.0 "doubling" on possible QT4-1 did not repeat. With n = 10 and a nondeterministic hosted
+model that is within noise.
+
+### Why possible requests fail (every trace of both sessions, re-simulated)
+
+All 52 failed possible-request episodes were re-simulated in-process from the agent's own actions,
+and the state at each failed goal compared with what the goal asks (`tests/diagnose_failures.py`).
+
+1. **The agent does not know how to command some devices (QT4-1/QT4-2, 36 of 40 failed
+   episodes).** It uses wrong argument names (16 episodes: `{"level": 60}` for `MoveToLevel`, whose
+   handler takes `Level`; `position` for `GoToLiftPercentage(lift_percent_100ths)`;
+   `SetTemperature(target_temperature)`). It also writes read-only attributes (8: `CurrentLevel`,
+   `TemperatureSetpoint`), uses wrong blind values or scale (6), names commands or attributes that
+   do not exist (6), uses wrong `SystemMode` values (5: 1 = auto instead of 4 = heat or 3 = cool),
+   and hits thermostat deadband violations (4). `get_device_structure` lists command NAMES only.
+   SimuHome's error does contain the expected parameters, but the workflow record keeps only the
+   short message ("Invalid arguments for command 'MoveToLevel'"), so the agent can never learn
+   them. The same seeds (5, 10, 20, 25, 30, 35, 45) fail in every arm of both sessions.
+2. **Real-time clock and a slow API (QT4-3 and part of QT4-1).** SimuHome's home runs in real
+   time, and the agent is told the time once, in its first prompt.
+   - Session 2 episodes took 6-13 minutes (65-80 s per LLM call under our rate limit).
+   - In QT4-3 every scheduled pause was 1.2-5.0 min too early (8 of 8 self-check episodes). The
+     agent added the dryer's remaining time to the stale start-of-episode clock.
+   - In QT4-1 some start times had already passed when submitted (HTTP 400).
+   - SimuHome's scorer checks goals only from the tick the episode ENDED at. A goal whose window
+     ends before then fails automatically ("monotonic_window_missed"; seed 15 of the gate run).
+3. **Benchmark quirks (about 5 episodes):** a required lookup of an unrelated room (seed 40,
+   every arm), and goals met but scored 0.
+
+### Correction to section 9
+
+Section 9 said a QT4-3 pause "1 min early passes" SimuHome's scorer. Checked in a simulated home
+(seeds 20 and 30), the facts are:
+- "Still running" is checked exactly 1 minute before the finish, with tolerance 0.
+- A pause 1.1 min early fails. A pause 0.9 min early, or on time, passes.
+- The v2.1 test asserted the opposite without running the scorer.
+
+### Gate v2.2 and the new E1 protocol
+
+- **G1, deadline-aware time check.** A call that would undo an earlier deadline goal on the same
+  device is refused before that deadline, with the allowed range in the message.
+- **G2, real command names.** A failing step is refused with SimuHome's full reason plus the
+  cluster's commands with their argument names and its writable attributes. These come from
+  SimuHome's own handlers, e.g. `MoveToLevel(Level: int, TransitionTime: Optional[int] = None, ...)`.
+- **G3, parser chain repair.** "N min after the previous action", when parsed as `now + N` plus
+  `previous + 0`, is merged into one reading. This shape never occurs in the gold labels.
+- **Clock held during LLM calls** (`src/pausable_sim.py`). Each simulator stops its clock while its
+  episode's agent waits for the API. This applies to every arm, and run ids carry `_ch`. SimuHome's
+  files are not edited: the server is imported and one method is wrapped at runtime.
+- **5-fold parser** (`notebooks/01_train_parser_v3_cv.ipynb`). Every one of the 300 QT4 requests is
+  parsed by a parser that never saw it, giving 50 episodes per cell instead of 8-10.
+- **Paired evaluation** (`notebooks/00_approach2_pipeline_v22.ipynb`, `src/analysis.py`):
+  - every arm runs on the same episodes;
+  - McNemar's exact test on the discordant pairs;
+  - goals met as a second measure;
+  - work split into resumable shards.
+
+### Checks before spending API calls
+
+| Check | Result |
+|---|---|
+| Joint Z3 verdicts / goal times inside windows | 286/286, 301/301 |
+| Gate on all 300 episodes: correct times refused / late calls refused / infeasible refused | 0/301, 251/251, 136/136 |
+| QT4-3 seed 30: pause 1.1 min early / 0.9 min early / on time / 1.5 min late | refused / passes / passes / refused |
+| Clock hold on a real server: 3 s held / 3 s running | +0.0 s / +3.0 s simulated |
+| End-to-end with real simulators, fake LLM, clock hold on | pass (18 holds, 0 errors) |
+| **Replay, session 1** (143 calls, 64 episodes) | **0 correct schedules blocked**; mistakes flagged in **33 of 42** failed episodes (v2.1: 23) |
+| **Replay, session 2** (45 calls, 27 episodes) | **0 blocked**; flagged in **18 of 20** failed episodes, including all 8 early QT4-3 pauses |

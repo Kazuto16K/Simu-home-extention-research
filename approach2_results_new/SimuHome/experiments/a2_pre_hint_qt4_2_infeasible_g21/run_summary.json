@@ -1,0 +1,10 @@
+{
+  "run_id": "a2_pre_hint_qt4_2_infeasible_g21",
+  "model": "google/gemma-4-31b-it",
+  "workers": 2,
+  "total": 8,
+  "skipped": 0,
+  "success": 8,
+  "failed": 0,
+  "seconds": 679.8
+}

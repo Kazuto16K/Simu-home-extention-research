@@ -1,0 +1,92 @@
+{
+  "selfcheck|qt4-1|feasible|google/gemma-4-31b-it": {
+    "evaluated": 10,
+    "correct": 3,
+    "infra_errors": 0,
+    "accuracy": 0.3,
+    "agent_calls_per_episode": 8.2,
+    "seconds_per_episode": 537.3,
+    "schedule_calls_per_episode": 2.9
+  },
+  "selfcheck|qt4-2|feasible|google/gemma-4-31b-it": {
+    "evaluated": 8,
+    "correct": 4,
+    "infra_errors": 0,
+    "accuracy": 0.5,
+    "agent_calls_per_episode": 6.88,
+    "seconds_per_episode": 347.1,
+    "schedule_calls_per_episode": 1.0
+  },
+  "selfcheck|qt4-3|feasible|google/gemma-4-31b-it": {
+    "evaluated": 9,
+    "correct": 0,
+    "infra_errors": 0,
+    "accuracy": 0.0,
+    "agent_calls_per_episode": 9.78,
+    "seconds_per_episode": 651.3,
+    "schedule_calls_per_episode": 0.89
+  },
+  "pre_hint@2.1|qt4-1|infeasible|google/gemma-4-31b-it": {
+    "evaluated": 10,
+    "correct": 10,
+    "infra_errors": 0,
+    "accuracy": 1.0,
+    "agent_calls_per_episode": 1.0,
+    "seconds_per_episode": 28.1,
+    "schedule_calls_per_episode": 0.0
+  },
+  "pre_hint@2.1|qt4-2|infeasible|google/gemma-4-31b-it": {
+    "evaluated": 8,
+    "correct": 8,
+    "infra_errors": 0,
+    "accuracy": 1.0,
+    "agent_calls_per_episode": 2.0,
+    "seconds_per_episode": 77.2,
+    "schedule_calls_per_episode": 0.0
+  },
+  "pre_hint@2.1|qt4-3|infeasible|google/gemma-4-31b-it": {
+    "evaluated": 9,
+    "correct": 4,
+    "infra_errors": 0,
+    "accuracy": 0.444,
+    "agent_calls_per_episode": 5.67,
+    "seconds_per_episode": 1195.4,
+    "schedule_calls_per_episode": 0.22
+  },
+  "full_answer@2.1|qt4-1|infeasible|google/gemma-4-31b-it": {
+    "evaluated": 10,
+    "correct": 10,
+    "infra_errors": 0,
+    "accuracy": 1.0,
+    "agent_calls_per_episode": 0.0,
+    "seconds_per_episode": 0.1,
+    "schedule_calls_per_episode": 0.0
+  },
+  "full_answer@2.1|qt4-2|infeasible|google/gemma-4-31b-it": {
+    "evaluated": 8,
+    "correct": 8,
+    "infra_errors": 0,
+    "accuracy": 1.0,
+    "agent_calls_per_episode": 0.0,
+    "seconds_per_episode": 0.3,
+    "schedule_calls_per_episode": 0.0
+  },
+  "full_answer@2.1|qt4-3|infeasible|google/gemma-4-31b-it": {
+    "evaluated": 9,
+    "correct": 4,
+    "infra_errors": 0,
+    "accuracy": 0.444,
+    "agent_calls_per_episode": 4.0,
+    "seconds_per_episode": 353.0,
+    "schedule_calls_per_episode": 0.22
+  },
+  "full@2.1|qt4-1|feasible|google/gemma-4-31b-it": {
+    "evaluated": 10,
+    "correct": 2,
+    "infra_errors": 0,
+    "accuracy": 0.2,
+    "agent_calls_per_episode": 9.7,
+    "seconds_per_episode": 763.0,
+    "schedule_calls_per_episode": 4.2
+  }
+}

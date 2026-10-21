@@ -1,4 +1,4 @@
-"""Offline check of a gate version against REAL agent behaviour from an E1 session.
+"""Offline check of the current gate version against REAL agent behaviour from an E1 session.
 
 Run: python tests/replay_traces.py <results dir> [path/to/SimuHome] [parse_cache.json]
 
@@ -40,7 +40,7 @@ def main(results_dir: str, simuhome_dir: str, cache_path: str) -> int:
         return {"status": {"code": 200, "message": "OK"}, "data": data, "error": None}
 
     files = sorted(glob.glob(os.path.join(results_dir, "SimuHome", "experiments", "a2_*_feasible", "*", "qt4-*.json")))
-    files = [f for f in files if any(f"a2_{a}_" in f for a in ("baseline", "v1_gate", "full"))]
+    files = [f for f in files if any(f"a2_{a}_" in f for a in ("baseline", "v1_gate", "full", "selfcheck"))]
     tally = collections.Counter()
     rows = []
     t0 = time.time()
@@ -81,7 +81,7 @@ def main(results_dir: str, simuhome_dir: str, cache_path: str) -> int:
             try:
                 if act == "execute_command":
                     home._execute_command(args["device_id"], args["endpoint_id"], args["cluster_id"], args["command_id"],
-                                          **(args.get("args") or {}))
+                                          args.get("args") or {})
                 elif act == "write_attribute":
                     home._write_attribute(args["device_id"], args["endpoint_id"], args["cluster_id"],
                                           args["attribute_id"], args["value"])
@@ -94,8 +94,11 @@ def main(results_dir: str, simuhome_dir: str, cache_path: str) -> int:
                 decisions.append(f"replay_error:{type(e).__name__}")
         refusals = [d for d in decisions if d not in ("ok",) and not d.startswith(("http", "replay_error"))]
         arm = os.path.basename(os.path.dirname(os.path.dirname(f)))
+        details = [((st.get("action_input") or {}).get("start_time"), d) for st, d in zip(
+            [st for st in rec.get("steps") or [] if st.get("action") == "schedule_workflow"
+             and isinstance(st.get("action_input"), dict)], decisions)]
         rows.append(dict(arm=arm, episode=os.path.basename(f)[:-5], score=score, preflight=gate.stats.preflight,
-                         decisions=decisions))
+                         decisions=decisions, calls=details))
         tally["episodes"] += 1
         tally[f"calls"] += len(decisions)
         tally[f"refusals_in_{'success' if score else 'failed'}_episodes"] += len(refusals)
@@ -118,7 +121,7 @@ def main(results_dir: str, simuhome_dir: str, cache_path: str) -> int:
     for r in rows:
         if r["score"] == 1 and any(d not in ("ok",) and not d.startswith(("http", "replay_error")) for d in r["decisions"]):
             print("  ", r["arm"], r["episode"], r["preflight"], r["decisions"])
-    out = os.path.join(results_dir, "replay_gate_v21.json")
+    out = os.path.join(results_dir, os.environ.get("REPLAY_OUT", "replay_gate_v22.json"))
     json.dump({"tally": tally, "rows": rows}, open(out, "w"), indent=1)
     print("saved", out)
     return 0

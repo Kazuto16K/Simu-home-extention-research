@@ -1,0 +1,11 @@
+sub_type,case,arm,model,correct,evaluated,accuracy,agent_calls_per_episode,seconds_per_episode,schedule_calls_per_episode,infra_errors
+qt4-1,feasible,full@2.1,google/gemma-4-31b-it,2,10,0.2,9.7,763.0,4.2,0
+qt4-1,feasible,selfcheck,google/gemma-4-31b-it,3,10,0.3,8.2,537.3,2.9,0
+qt4-1,infeasible,full_answer@2.1,google/gemma-4-31b-it,10,10,1.0,0.0,0.1,0.0,0
+qt4-1,infeasible,pre_hint@2.1,google/gemma-4-31b-it,10,10,1.0,1.0,28.1,0.0,0
+qt4-2,feasible,selfcheck,google/gemma-4-31b-it,4,8,0.5,6.88,347.1,1.0,0
+qt4-2,infeasible,full_answer@2.1,google/gemma-4-31b-it,8,8,1.0,0.0,0.3,0.0,0
+qt4-2,infeasible,pre_hint@2.1,google/gemma-4-31b-it,8,8,1.0,2.0,77.2,0.0,0
+qt4-3,feasible,selfcheck,google/gemma-4-31b-it,0,9,0.0,9.78,651.3,0.89,0
+qt4-3,infeasible,full_answer@2.1,google/gemma-4-31b-it,4,9,0.444,4.0,353.0,0.22,0
+qt4-3,infeasible,pre_hint@2.1,google/gemma-4-31b-it,4,9,0.444,5.67,1195.4,0.22,0

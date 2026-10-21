@@ -29,6 +29,24 @@ v2.1 (after E1 session 1, see results/e1_session1_analysis.md):
   F4 a workflow that changes nothing on the copy (e.g. pausing a washer that is not running)
      is refused, unless the devices already are in a state the request asks for.
 
+v2.2 (after E1 session 2, see docs/FINDINGS.md section 10):
+  G1 a call that would overwrite an earlier DEADLINE goal on the same device is refused if it comes before
+     that deadline (QT4-3: "start the dishwasher now, pause it when the dryer finishes" is checked as
+     "still running 1 min before the dryer finishes"; agents paused 1-5 min early). v2.1 compared with the
+     deadline goal's window START, which for a deadline is "now", so the rule never fired;
+  G2 a refused (or let-through) failing step comes with SimuHome's full reason and the cluster's real
+     commands and argument names (agents wrote {"level": 60} for MoveToLevel(Level, ...), wrote read-only
+     attributes, and never learned why: SimuHome's workflow record keeps only "Invalid arguments");
+  G3 the parser's "now + N and previous goal + M" split of "N min after the previous action" is merged
+     (grounding.repair_split_chain), and a chain pointing at another device's action is re-pointed to the
+     previous action on the SAME device (grounding.repair_chain_anchor; 56 of 56 benchmark labels chain that
+     way), and a clock time the user stated but the parser dropped is put back for QT4-3-shaped requests
+     (grounding.restore_stated_clock: 17 missed QT4-3 contradictions). All found in the 5-fold parsers'
+     held-out errors;
+  G4 the time check applies only to a call the dry run MATCHES to a goal (it produces that goal's values).
+     A call for a goal the parser missed used to be checked against another goal on the same device (at
+     another time) and refused although it was right.
+
 Nothing here imports SimuHome: tool calls, the parser and the dry run are passed in,
 so the logic is unit-testable without a simulator or GPU.
 """
@@ -49,7 +67,7 @@ from .constraint_encoder import (
     minutes_to_clock,
 )
 from .explain import TimerRead, agent_hint, device_label, refusal_detail, user_reply
-from .grounding import ground_ir, repair_device_ids
+from .grounding import ground_ir, repair_chain_anchor, repair_device_ids, repair_split_chain, restore_stated_clock
 from .ir_schema import ir_from_compact, uses_goal_anchors
 from .shadow_sim import values_match
 
@@ -68,6 +86,7 @@ class GateConfig:
     sat_hints: bool = False  # also tell the agent the computed times when the request is consistent
     ground_clock_times: bool = True  # drop clock times the parser wrote but the user never said (grounding.py)
     ground_device_names: bool = True  # map device ids that do not exist in the house to the closest real one
+    repair_chains: bool = True  # G3: merge "now + N" / "previous goal + 0" split readings (grounding.py)
     max_plan_rejections: int = 2  # per episode and per kind (time / dry_run / target); then fail open
     max_unsat_rejections: int = 3  # per episode, for an infeasible request
     slack_minutes: float = 0.25  # extra slack on every window (SimuHome scores within +/-30 s)
@@ -135,6 +154,9 @@ class GateStats:
     clock_readings_dropped: int = 0  # parser clock times not found in the request (grounding filter)
     device_names_repaired: int = 0  # parser device ids not in the house, mapped to the closest real device
     device_names_unresolved: int = 0  # ... and ones with no close match (left as they are)
+    chains_repaired: int = 0  # G3
+    clock_readings_restored: int = 0  # G3: stated clock times the parser left out
+    time_unchecked: int = 0  # G4: the call matched no goal by its effect, so no time check
     schedule_calls: int = 0
     passed: int = 0
     unsat_rejections: int = 0
@@ -232,10 +254,16 @@ class EpisodeGate:
             compact = copy.deepcopy(self.compact_ir)
             if self.cfg.ground_clock_times:
                 compact, self.stats.clock_readings_dropped = ground_ir(compact, self.query)
+            if self.cfg.repair_chains:
+                compact, self.stats.chains_repaired = repair_split_chain(compact, self.query)
+                compact, self.stats.clock_readings_restored = restore_stated_clock(compact, self.query)
             if self.cfg.ground_device_names:
                 known = self._house_device_ids()
                 if known:
                     compact, self.stats.device_names_repaired, self.stats.device_names_unresolved =                         repair_device_ids(compact, known)
+            if self.cfg.repair_chains:
+                compact, n = repair_chain_anchor(compact)
+                self.stats.chains_repaired += n
             self._resolve_device_anchors(compact)
             self.ir = ir_from_compact(compact, self.query, self.base_time)
             self.result = check_feasibility(self.ir)
@@ -327,10 +355,10 @@ class EpisodeGate:
             if dr is not None and dr.status == "failed":
                 if self.cfg.dry_run == "reject" and self.stats.dry_run_rejections < self.cfg.max_plan_rejections:
                     self.stats.dry_run_rejections += 1
+                    why = dr.error_detail or dr.error
                     return _response(409, "DRY_RUN_FAILED", "WORKFLOW_STEP_WOULD_FAIL", (
                         f"Scheduling refused: when this workflow runs at {start_time}, a step would fail: "
-                        f"{dr.error}. Check the device's commands and attributes with get_device_structure, "
-                        "fix the step, and schedule again."
+                        f"{why}. Fix the step (use exactly these command and argument names) and schedule again."
                     ))
 
         # F3: which goal is this call for? The one whose target values the steps actually produce.
@@ -378,6 +406,11 @@ class EpisodeGate:
         # state holds at ANY moment of the goal's window (+/- tolerance); it does not care when the action
         # happened. So a call is refused only if it is too LATE (after the window ends) or so early that it
         # would overwrite an EARLIER goal on the same device before that goal's window opens.
+        if matched and self.windows and satisfied == 0 and self.cfg.dry_run != "off":
+            # G4: the dry run ran but the call produces no goal's values: the parser may have missed this goal,
+            # so the other goals on the device say nothing about when THIS call should run. Not time-checked.
+            self.stats.time_unchecked += 1
+            matched = []
         if matched and self.windows:
             inside = [g for g in matched if self._time_allows(g, start_min)]
             if not inside:
@@ -392,7 +425,7 @@ class EpisodeGate:
         # target check (warn / reject) against the matched goal only
         notes = []
         if dr is not None and dr.status == "failed":
-            notes.append(f"Dry run: a step will fail at {start_time}: {dr.error}.")
+            notes.append(f"Dry run: a step will fail at {start_time}: {dr.error_detail or dr.error}.")
         if dr is not None and self.cfg.target_check != "off" and candidates:
             best = self._closest_goals(matched, start_min)
             expected = self._expected_targets(best, devices)
@@ -414,20 +447,31 @@ class EpisodeGate:
             resp["data"]["verifier_note"] = " ".join(notes)
         return resp
 
-    def _earlier_same_device_start(self, goal) -> Optional[float]:
-        """Window start of the latest goal that comes before `goal` on one of its devices, or None."""
+    def _earlier_bound(self, goal) -> tuple[Optional[float], bool]:
+        """(earliest time a call for `goal` may run without undoing an EARLIER goal on one of its devices before
+        that goal is checked, whether that bound is a deadline). SimuHome checks an ordinary goal at any moment
+        of its window, so the earlier goal's state only has to exist once: its window START. A deadline goal
+        ("still running 1 min before the dryer finishes", relation "by") is checked AT the deadline, so its
+        state must last until then: its resolved time (G1, v2.2; v2.1 used the window start, which for a
+        deadline is "now", so the rule never fired)."""
         resolved = {g.goal_id: g.resolved_minutes for g in self.result.goal_results}
         mine = resolved.get(goal.goal_id)
         devs = {t.device_id for t in goal.targets}
-        starts = []
+        best: tuple[Optional[float], bool] = (None, False)
         for g in self.ir.goals:
             if g.goal_id == goal.goal_id or not devs & {t.device_id for t in g.targets}:
                 continue
             r = resolved.get(g.goal_id)
             w = self.windows.get(g.goal_id)
-            if mine is not None and r is not None and r < mine and w is not None and w.lo is not None:
-                starts.append(w.lo)
-        return max(starts) if starts else None
+            if mine is None or r is None or r >= mine or w is None:
+                continue
+            b = (r, True) if w.deadline else ((w.lo, False) if w.lo is not None else (None, False))
+            if b[0] is not None and (best[0] is None or b[0] > best[0]):
+                best = b
+        return best
+
+    def _earlier_same_device_start(self, goal) -> Optional[float]:
+        return self._earlier_bound(goal)[0]
 
     def _time_allows(self, goal, start_min: float) -> bool:
         w = self.windows.get(goal.goal_id)
@@ -436,8 +480,9 @@ class EpisodeGate:
         slack = self.cfg.slack_minutes
         if w.hi is not None and start_min > w.hi + slack:
             return False  # too late: the state cannot hold within the goal's window
-        lo = self._earlier_same_device_start(goal)
-        if lo is not None and start_min < lo - slack:
+        lo, is_deadline = self._earlier_bound(goal)
+        # a deadline is checked at one instant, so no slack before it (the agents' mistake is minutes early)
+        if lo is not None and start_min < lo - (0.0 if is_deadline else slack):
             return False  # too early: it would replace the earlier goal's state before that goal is checked
         return True
 
@@ -518,7 +563,7 @@ class EpisodeGate:
             w = self.windows.get(g.goal_id)
             if w is None:
                 continue
-            earlier = self._earlier_same_device_start(g)
+            earlier, earlier_deadline = self._earlier_bound(g)
             lo = minutes_to_clock(self.base_time, earlier) if earlier is not None else None
             hi = minutes_to_clock(self.base_time, w.hi) if w.hi is not None else None
             devs = ", ".join(device_label(t.device_id) for t in g.targets)
@@ -527,7 +572,10 @@ class EpisodeGate:
                    for r in g.readings if r.anchor.kind == "device_event"
                    and self.timer_reads.get(r.anchor.device_id) is not None
                    and self.timer_reads[r.anchor.device_id].finish_minutes is not None]
-            if lo and hi:
+            if lo and hi and earlier_deadline:
+                rng = (f"between {lo} and {hi} (not before {lo}: until then the device must stay as the earlier "
+                       "part of the request says)")
+            elif lo and hi:
                 rng = f"no later than {hi} (and not before {lo}, when the previous step on this device is due)"
             elif hi:
                 rng = f"no later than {hi}"

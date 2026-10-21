@@ -6,10 +6,11 @@ Real SimuHome homes in-process, gold IR as the parser, the agent's actions repla
   seed 45: the agent pressed Start before powering the washer on (start silently fails), then
            scheduled the pause. v2.0 only attached an ignored note. v2.1 must refuse with
            NO_EFFECT (F4); the correct sequence (power on, then start) must pass.
-  seed 30: "pause dryer 1 when dryer 2 finishes". SimuHome scores the state at the goal time
-           (+/-30 s), so a pause a minute EARLY still succeeds and must pass; a pause after the
-           window must be matched to the pause goal (F3, not the "keep running" deadline goal,
-           which has no time limit) and refused with TIME_MISMATCH.
+  seed 30: "pause dryer 1 when dryer 2 finishes". SimuHome checks "dryer 1 still running" exactly 1 min
+           before dryer 2 finishes (tolerance 0) and "paused" within +/-30 s of the finish. Checked in a
+           simulated home: a pause 1.1 min early fails the first check, 0.9 min early passes both. So
+           v2.2 (G1) must refuse -1.1 and pass -0.9 and 0; a pause after the window must be matched to the
+           pause goal (F3) and refused. (v2.1's test wrongly assumed -1.1 passes.)
 """
 
 from __future__ import annotations
@@ -107,14 +108,19 @@ def main(simuhome_dir: str) -> int:
         home._execute_command(dryer, 1, "OperationalState", "Start")
 
     r_early, _ = scenario(30, started, -1.1)
+    r_slightly, _ = scenario(30, started, -0.9)
     r_ok, g_ok = scenario(30, started, 0.0)
     r_late, g_late = scenario(30, started, +1.5)
-    print("seed 30, pause 1.1 min early   ->", r_early["status"]["code"], "(SimuHome accepts this, so must pass)")
+    print("seed 30, pause 1.1 min early   ->", r_early["status"]["code"], "(SimuHome fails this: must be refused)")
+    print("   message:", ((r_early.get("error") or {}).get("detail") or "")[:260])
+    print("seed 30, pause 0.9 min early   ->", r_slightly["status"]["code"], "(SimuHome accepts this: must pass)")
     print("seed 30, pause on time         ->", r_ok["status"]["code"], "| effect-matched:", g_ok.stats.effect_matched_calls)
     print("seed 30, pause 1.5 min late    ->", r_late["status"]["code"], (r_late.get("error") or {}).get("type"))
     print("   message:", ((r_late.get("error") or {}).get("detail") or "")[:260])
-    if r_early["status"]["code"] != 200:
-        problems.append(f"seed 30: early pause refused (the scorer accepts it): {r_early}")
+    if r_early["status"]["code"] != 409:
+        problems.append(f"seed 30: pause before the 'still running' check not refused: {r_early}")
+    if r_slightly["status"]["code"] != 200:
+        problems.append(f"seed 30: pause after the 'still running' check refused (the scorer accepts it): {r_slightly}")
     if r_ok["status"]["code"] != 200:
         problems.append(f"seed 30: on-time pause refused: {r_ok}")
     # too late: dryer 1 may already have finished by then, so either the time check or the

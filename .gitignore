@@ -35,3 +35,6 @@ qwen3_ir_parser_adapter*/
 .claude/
 .vscode/
 *.log
+
+# ---- Office lock files ----
+~$*

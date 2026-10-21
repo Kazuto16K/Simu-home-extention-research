@@ -1,0 +1,512 @@
+{
+ "tally": {
+  "episodes": 27,
+  "calls": 45,
+  "refusals_in_failed_episodes": 26,
+  "episodes_with_refusal_failed": 18,
+  "failed_episodes": 20,
+  "blocking_refusals_in_failed_episodes": 19,
+  "kind:WORKFLOW_STEP_WOULD_FAIL|failed": 15,
+  "kind:START_TIME_DOES_NOT_MATCH_REQUEST|failed": 9,
+  "refusals_in_success_episodes": 0,
+  "episodes_with_refusal_success": 0,
+  "success_episodes": 7,
+  "blocking_refusals_in_success_episodes": 0,
+  "kind:WORKFLOW_WOULD_CHANGE_NOTHING|failed": 2
+ },
+ "rows": [
+  {
+   "arm": "a2_selfcheck_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_10",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "WORKFLOW_STEP_WOULD_FAIL",
+    "WORKFLOW_STEP_WOULD_FAIL",
+    "ok",
+    "START_TIME_DOES_NOT_MATCH_REQUEST"
+   ],
+   "calls": [
+    [
+     "2025-08-23 18:13:27",
+     "WORKFLOW_STEP_WOULD_FAIL"
+    ],
+    [
+     "2025-08-23 18:32:27",
+     "WORKFLOW_STEP_WOULD_FAIL"
+    ],
+    [
+     "2025-08-23 18:22:27",
+     "ok"
+    ],
+    [
+     "2025-08-23 18:45:27",
+     "START_TIME_DOES_NOT_MATCH_REQUEST"
+    ]
+   ]
+  },
+  {
+   "arm": "a2_selfcheck_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_15",
+   "score": 1,
+   "preflight": "sat",
+   "decisions": [
+    "ok",
+    "ok",
+    "ok"
+   ],
+   "calls": [
+    [
+     "2025-08-23 12:12:33",
+     "ok"
+    ],
+    [
+     "2025-08-23 12:28:33",
+     "ok"
+    ],
+    [
+     "2025-08-23 12:34:33",
+     "ok"
+    ]
+   ]
+  },
+  {
+   "arm": "a2_selfcheck_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_20",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "WORKFLOW_STEP_WOULD_FAIL",
+    "WORKFLOW_STEP_WOULD_FAIL",
+    "ok",
+    "ok"
+   ],
+   "calls": [
+    [
+     "2025-08-23 11:31:43",
+     "WORKFLOW_STEP_WOULD_FAIL"
+    ],
+    [
+     "2025-08-23 11:54:43",
+     "WORKFLOW_STEP_WOULD_FAIL"
+    ],
+    [
+     "2025-08-23 11:42:43",
+     "ok"
+    ],
+    [
+     "2025-08-23 12:07:43",
+     "ok"
+    ]
+   ]
+  },
+  {
+   "arm": "a2_selfcheck_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_25",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "ok",
+    "WORKFLOW_STEP_WOULD_FAIL"
+   ],
+   "calls": [
+    [
+     "2025-08-23 15:55:59",
+     "ok"
+    ],
+    [
+     "2025-08-23 16:03:59",
+     "WORKFLOW_STEP_WOULD_FAIL"
+    ]
+   ]
+  },
+  {
+   "arm": "a2_selfcheck_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_30",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "WORKFLOW_STEP_WOULD_FAIL",
+    "ok",
+    "WORKFLOW_STEP_WOULD_FAIL"
+   ],
+   "calls": [
+    [
+     "2025-08-23 17:56:18",
+     "WORKFLOW_STEP_WOULD_FAIL"
+    ],
+    [
+     "2025-08-23 18:02:18",
+     "ok"
+    ],
+    [
+     "2025-08-23 18:20:18",
+     "WORKFLOW_STEP_WOULD_FAIL"
+    ]
+   ]
+  },
+  {
+   "arm": "a2_selfcheck_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_35",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "WORKFLOW_STEP_WOULD_FAIL",
+    "WORKFLOW_STEP_WOULD_FAIL",
+    "ok"
+   ],
+   "calls": [
+    [
+     "2025-08-23 17:35:48",
+     "WORKFLOW_STEP_WOULD_FAIL"
+    ],
+    [
+     "2025-08-23 17:35:48",
+     "WORKFLOW_STEP_WOULD_FAIL"
+    ],
+    [
+     "2025-08-23 17:49:48",
+     "ok"
+    ]
+   ]
+  },
+  {
+   "arm": "a2_selfcheck_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_40",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "ok"
+   ],
+   "calls": [
+    [
+     "2025-08-23 16:43:56",
+     "ok"
+    ]
+   ]
+  },
+  {
+   "arm": "a2_selfcheck_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_45",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "WORKFLOW_STEP_WOULD_FAIL",
+    "WORKFLOW_STEP_WOULD_FAIL",
+    "WORKFLOW_WOULD_CHANGE_NOTHING",
+    "WORKFLOW_WOULD_CHANGE_NOTHING"
+   ],
+   "calls": [
+    [
+     "2025-08-23 13:39:31",
+     "WORKFLOW_STEP_WOULD_FAIL"
+    ],
+    [
+     "2025-08-23 13:46:31",
+     "WORKFLOW_STEP_WOULD_FAIL"
+    ],
+    [
+     "2025-08-23 13:41:31",
+     "WORKFLOW_WOULD_CHANGE_NOTHING"
+    ],
+    [
+     "2025-08-23 13:46:31",
+     "WORKFLOW_WOULD_CHANGE_NOTHING"
+    ]
+   ]
+  },
+  {
+   "arm": "a2_selfcheck_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_5",
+   "score": 1,
+   "preflight": "sat",
+   "decisions": [
+    "ok",
+    "ok",
+    "ok"
+   ],
+   "calls": [
+    [
+     "2025-08-23 18:41:47",
+     "ok"
+    ],
+    [
+     "2025-08-23 18:46:47",
+     "ok"
+    ],
+    [
+     "2025-08-23 19:13:47",
+     "ok"
+    ]
+   ]
+  },
+  {
+   "arm": "a2_selfcheck_qt4_1_feasible",
+   "episode": "qt4-1_feasible_seed_50",
+   "score": 1,
+   "preflight": "sat",
+   "decisions": [
+    "ok",
+    "ok"
+   ],
+   "calls": [
+    [
+     "2025-08-23 17:14:17",
+     "ok"
+    ],
+    [
+     "2025-08-23 17:19:17",
+     "ok"
+    ]
+   ]
+  },
+  {
+   "arm": "a2_selfcheck_qt4_2_feasible",
+   "episode": "qt4-2_feasible_seed_15",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "WORKFLOW_STEP_WOULD_FAIL"
+   ],
+   "calls": [
+    [
+     "2025-08-23 13:22:38",
+     "WORKFLOW_STEP_WOULD_FAIL"
+    ]
+   ]
+  },
+  {
+   "arm": "a2_selfcheck_qt4_2_feasible",
+   "episode": "qt4-2_feasible_seed_20",
+   "score": 1,
+   "preflight": "sat",
+   "decisions": [
+    "ok"
+   ],
+   "calls": [
+    [
+     "2025-08-23 12:07:51",
+     "ok"
+    ]
+   ]
+  },
+  {
+   "arm": "a2_selfcheck_qt4_2_feasible",
+   "episode": "qt4-2_feasible_seed_30",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "WORKFLOW_STEP_WOULD_FAIL"
+   ],
+   "calls": [
+    [
+     "2025-08-23 18:25:14",
+     "WORKFLOW_STEP_WOULD_FAIL"
+    ]
+   ]
+  },
+  {
+   "arm": "a2_selfcheck_qt4_2_feasible",
+   "episode": "qt4-2_feasible_seed_35",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "WORKFLOW_STEP_WOULD_FAIL"
+   ],
+   "calls": [
+    [
+     "2025-08-23 18:04:31",
+     "WORKFLOW_STEP_WOULD_FAIL"
+    ]
+   ]
+  },
+  {
+   "arm": "a2_selfcheck_qt4_2_feasible",
+   "episode": "qt4-2_feasible_seed_45",
+   "score": 1,
+   "preflight": "sat",
+   "decisions": [
+    "ok"
+   ],
+   "calls": [
+    [
+     "2025-08-23 14:15:15",
+     "ok"
+    ]
+   ]
+  },
+  {
+   "arm": "a2_selfcheck_qt4_2_feasible",
+   "episode": "qt4-2_feasible_seed_50",
+   "score": 1,
+   "preflight": "sat",
+   "decisions": [
+    "ok"
+   ],
+   "calls": [
+    [
+     "2025-08-23 17:49:11",
+     "ok"
+    ]
+   ]
+  },
+  {
+   "arm": "a2_selfcheck_qt4_2_feasible",
+   "episode": "qt4-2_feasible_seed_55",
+   "score": 1,
+   "preflight": "sat",
+   "decisions": [
+    "ok"
+   ],
+   "calls": [
+    [
+     "2025-08-23 11:03:15",
+     "ok"
+    ]
+   ]
+  },
+  {
+   "arm": "a2_selfcheck_qt4_2_feasible",
+   "episode": "qt4-2_feasible_seed_60",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "WORKFLOW_STEP_WOULD_FAIL"
+   ],
+   "calls": [
+    [
+     "2025-08-23 14:28:06",
+     "WORKFLOW_STEP_WOULD_FAIL"
+    ]
+   ]
+  },
+  {
+   "arm": "a2_selfcheck_qt4_3_feasible",
+   "episode": "qt4-3_feasible_seed_20",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "START_TIME_DOES_NOT_MATCH_REQUEST"
+   ],
+   "calls": [
+    [
+     "2025-08-23 11:57:08",
+     "START_TIME_DOES_NOT_MATCH_REQUEST"
+    ]
+   ]
+  },
+  {
+   "arm": "a2_selfcheck_qt4_3_feasible",
+   "episode": "qt4-3_feasible_seed_30",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "START_TIME_DOES_NOT_MATCH_REQUEST"
+   ],
+   "calls": [
+    [
+     "2025-08-23 18:34:11",
+     "START_TIME_DOES_NOT_MATCH_REQUEST"
+    ]
+   ]
+  },
+  {
+   "arm": "a2_selfcheck_qt4_3_feasible",
+   "episode": "qt4-3_feasible_seed_35",
+   "score": 0,
+   "preflight": "not_run",
+   "decisions": [],
+   "calls": []
+  },
+  {
+   "arm": "a2_selfcheck_qt4_3_feasible",
+   "episode": "qt4-3_feasible_seed_45",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "START_TIME_DOES_NOT_MATCH_REQUEST"
+   ],
+   "calls": [
+    [
+     "2025-08-23 14:07:48",
+     "START_TIME_DOES_NOT_MATCH_REQUEST"
+    ]
+   ]
+  },
+  {
+   "arm": "a2_selfcheck_qt4_3_feasible",
+   "episode": "qt4-3_feasible_seed_50",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "START_TIME_DOES_NOT_MATCH_REQUEST"
+   ],
+   "calls": [
+    [
+     "2025-08-23 17:34:10",
+     "START_TIME_DOES_NOT_MATCH_REQUEST"
+    ]
+   ]
+  },
+  {
+   "arm": "a2_selfcheck_qt4_3_feasible",
+   "episode": "qt4-3_feasible_seed_55",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "START_TIME_DOES_NOT_MATCH_REQUEST"
+   ],
+   "calls": [
+    [
+     "2025-08-23 11:06:34",
+     "START_TIME_DOES_NOT_MATCH_REQUEST"
+    ]
+   ]
+  },
+  {
+   "arm": "a2_selfcheck_qt4_3_feasible",
+   "episode": "qt4-3_feasible_seed_70",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "START_TIME_DOES_NOT_MATCH_REQUEST"
+   ],
+   "calls": [
+    [
+     "2025-08-23 11:14:11",
+     "START_TIME_DOES_NOT_MATCH_REQUEST"
+    ]
+   ]
+  },
+  {
+   "arm": "a2_selfcheck_qt4_3_feasible",
+   "episode": "qt4-3_feasible_seed_75",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "START_TIME_DOES_NOT_MATCH_REQUEST"
+   ],
+   "calls": [
+    [
+     "2025-08-23 17:18:46",
+     "START_TIME_DOES_NOT_MATCH_REQUEST"
+    ]
+   ]
+  },
+  {
+   "arm": "a2_selfcheck_qt4_3_feasible",
+   "episode": "qt4-3_feasible_seed_80",
+   "score": 0,
+   "preflight": "sat",
+   "decisions": [
+    "START_TIME_DOES_NOT_MATCH_REQUEST"
+   ],
+   "calls": [
+    [
+     "2025-08-23 14:08:20",
+     "START_TIME_DOES_NOT_MATCH_REQUEST"
+    ]
+   ]
+  }
+ ]
+}

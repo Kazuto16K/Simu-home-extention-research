@@ -52,6 +52,9 @@ class DryRunResult:
     device_states: dict = field(default_factory=dict)
     # same keys as `observed`, on the twin copy WITHOUT the workflow (only when check_effect)
     observed_without: dict = field(default_factory=dict)
+    # v2.2: for a failed step, SimuHome's full reason (its workflow record keeps only the short message, e.g.
+    # "Invalid arguments for command 'MoveToLevel'") plus the cluster's real commands and their arguments
+    error_detail: Optional[str] = None
 
 
 def _split_attribute(path: str) -> tuple[int, str, str]:
@@ -106,6 +109,85 @@ def _readable_state(home, device_id: str) -> dict:
         except Exception:
             pass
     return out
+
+
+def _signature(func) -> str:
+    """'MoveToLevel(Level: int, TransitionTime: Optional[int] = None, ...)' from SimuHome's command handler."""
+    import inspect
+
+    try:
+        params = [p for name, p in inspect.signature(func).parameters.items() if name != "self"]
+    except (TypeError, ValueError):
+        return "(...)"
+    out = []
+    for p in params:
+        txt = p.name
+        if p.annotation is not inspect.Parameter.empty:
+            ann = p.annotation if isinstance(p.annotation, str) else getattr(p.annotation, "__name__", str(p.annotation))
+            txt += f": {str(ann).replace('typing.', '')}"
+        if p.default is not inspect.Parameter.empty:
+            txt += f" = {p.default!r}"
+        out.append(txt)
+    return "(" + ", ".join(out) + ")"
+
+
+def cluster_help(home, device_id: str, endpoint_id: Any, cluster_id: str) -> Optional[str]:
+    """The commands (with argument names, exactly as SimuHome's handlers take them) and the writable
+    attributes of one cluster. `get_device_structure` lists command NAMES only, so an agent that guesses
+    `{"level": 60}` for MoveToLevel (the handler takes `Level`) gets "Invalid arguments" and nothing else."""
+    try:
+        device = home.devices_by_id[device_id][1]
+        cluster = device.endpoints[int(endpoint_id)][cluster_id]
+    except Exception:
+        return None
+    cmds = [f"{name}{_signature(fn)}" for name, fn in cluster.commands.items()]
+    writable = [a for a in cluster.attributes if a not in getattr(cluster, "readonly_attributes", set())]
+    parts = []
+    if cmds:
+        parts.append(f"{cluster_id} commands: " + "; ".join(cmds))
+    if writable:
+        parts.append(f"writable {cluster_id} attributes: " + ", ".join(writable))
+    return ". ".join(parts) if parts else None
+
+
+_STEP_SHAPE = (
+    'A step is {"tool": "execute_command", "args": {"device_id", "endpoint_id", "cluster_id", "command_id", '
+    '"args": {...}}} or {"tool": "write_attribute", "args": {"device_id", "endpoint_id", "cluster_id", '
+    '"attribute_id", "value"}}'
+)
+
+
+def explain_failure(home, steps: list, error_message: Optional[str]) -> Optional[str]:
+    """Find the step that failed (re-running each step on the copy AFTER the failure, where the earlier
+    steps succeed again and the bad one fails the same way) and return SimuHome's full reason for it, plus
+    the cluster's commands/arguments when the step named a wrong command, wrong arguments or a read-only
+    attribute."""
+    for st in steps or []:
+        if not isinstance(st, dict) or not isinstance(st.get("args"), dict):
+            continue
+        a = st["args"]
+        try:
+            if st.get("tool") == "execute_command":
+                r = home._execute_command(**a)  # noqa: SLF001 (SimuHome's own command path)
+            elif st.get("tool") == "write_attribute":
+                r = home._write_attribute(**a)  # noqa: SLF001
+            else:
+                continue
+        except TypeError as e:  # the step's own keys are wrong (e.g. "command" instead of "command_id")
+            return f"the step's fields are wrong ({e}). {_STEP_SHAPE}"
+        except Exception:
+            continue
+        if r.success or (error_message and r.error_message != error_message):
+            continue
+        detail = getattr(r, "error_detail", None)
+        out = [f"{r.error_message}" + (f" ({detail})" if detail and detail != r.error_message else "")]
+        msg = (r.error_message or "") + " " + (detail or "")
+        if any(k in msg for k in ("Invalid arguments", "not found", "read-only", "readonly", "read only")):
+            helptext = cluster_help(home, a.get("device_id"), a.get("endpoint_id"), a.get("cluster_id"))
+            if helptext:
+                out.append(helptext)
+        return ". ".join(out)
+    return None
 
 
 def dry_run(
@@ -173,6 +255,12 @@ def dry_run(
             no_effect = None
 
     status = wf.get("status", "pending")
+    error_detail = None
+    if status == "failed":
+        try:
+            error_detail = explain_failure(home, candidate.get("steps"), wf.get("error"))
+        except Exception:
+            error_detail = None
     return DryRunResult(
         ok=status == "completed",
         status=status,
@@ -183,4 +271,5 @@ def dry_run(
         no_effect=no_effect,
         device_states=states,
         observed_without=observed_without,
+        error_detail=error_detail,
     )

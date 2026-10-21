@@ -1,0 +1,10 @@
+{
+  "run_id": "a2_selfcheck_qt4_2_feasible",
+  "model": "google/gemma-4-31b-it",
+  "workers": 2,
+  "total": 8,
+  "skipped": 0,
+  "success": 8,
+  "failed": 0,
+  "seconds": 1522.3
+}

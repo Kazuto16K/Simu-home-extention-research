@@ -155,3 +155,120 @@ def ground_ir(compact: dict, query: str) -> tuple[dict, int]:
             kept.append(r)
         g["readings"] = kept
     return out, dropped
+
+
+
+_PREVIOUS_ACTION = re.compile(r"\bafter (the|that) previous\b", re.I)
+
+
+def repair_split_chain(compact: dict, query: str) -> tuple[dict, int]:
+    """Merge a "N minutes after the previous action" that the parser split into two readings.
+
+    Seen in E1 (QT4-1 feasible seed 25): "... cool the fridge 8 minutes after the previous action" came out as
+    two readings of one goal, `now + 8` AND `previous goal + 0` (another fold's parser: `+ 1`). Both cannot
+    hold (the previous goal is at now + 6), so Z3 called a POSSIBLE request impossible or computed a wrong
+    window. The fix applies only to exactly that shape: a goal with ONE reading `after <goal> + M` and ONE
+    relative reading `after now + N` (N > 0, no clock time), in a request that says "after the previous ...".
+    It becomes `after <goal> + N` (N is the stated "N minutes after the previous action"). The benchmark's labels never
+    have this shape (checked over all 300 QT4 episodes: a goal with both a `now` and a goal reading occurs only
+    in QT4-3, as a stated CLOCK time, which this leaves alone), so no real contradiction can be removed.
+    Returns (repaired copy, number of goals repaired)."""
+    if not _PREVIOUS_ACTION.search(query or ""):
+        return compact, 0
+    out = copy.deepcopy(compact)
+    fixed = 0
+    for g in out.get("goals", []):
+        rs = g.get("readings") or []
+        chain = [r for r in rs if (r.get("anchor") or {}).get("kind") == "goal" and r.get("relation") == "after"]
+        rel_now = [r for r in rs if (r.get("anchor") or {}).get("kind") == "now" and r.get("relation") == "after"
+                   and not r.get("absolute_time") and float(r.get("offset_minutes") or 0) > 0]
+        if len(chain) == 1 and len(rel_now) == 1:
+            chain[0]["offset_minutes"] = float(rel_now[0]["offset_minutes"])
+            g["readings"] = [r for r in rs if r is not rel_now[0]]
+            fixed += 1
+    return out, fixed
+
+
+def _devices(goal: dict) -> set:
+    return {t.get("device_id") for t in goal.get("targets") or [] if t.get("device_id")}
+
+
+def repair_chain_anchor(compact: dict) -> tuple[dict, int]:
+    """Re-point "after the previous action" to the previous action ON THE SAME DEVICE.
+
+    In SimuHome's requests "... set the dimmer to 60 in 15 minutes and bump IT to 100 23 minutes after the
+    previous action" chains to the dimmer's own earlier action: in the benchmark's labels every chained QT4-1
+    goal (56 of 56) refers to the latest earlier goal on the same device. The 5-fold parsers sometimes point the
+    chain at the previous SENTENCE's device instead (e.g. the dehumidifier step chained to the air purifier),
+    which puts the goal's window at a wrong time and would make the time check refuse a correct schedule. A
+    goal-anchored "after" reading whose referenced goal shares no device with this goal is re-pointed to the
+    latest earlier goal (in the IR's order) that does; nothing changes if there is none. Run after device-name
+    repair so that typos do not hide a shared device. Returns (repaired copy, readings re-pointed)."""
+    out = copy.deepcopy(compact)
+    goals = out.get("goals", [])
+    fixed = 0
+    for i, g in enumerate(goals):
+        mine = _devices(g)
+        for r in g.get("readings") or []:
+            a = r.get("anchor") or {}
+            if a.get("kind") != "goal" or r.get("relation") != "after":
+                continue
+            ref = a.get("goal_ref")
+            if not isinstance(ref, int) or not (0 <= ref < len(goals)) or mine & _devices(goals[ref]):
+                continue
+            same = [j for j in range(i) if j != ref and mine & _devices(goals[j])]
+            if same:
+                a["goal_ref"] = same[-1]
+                fixed += 1
+    return out, fixed
+
+
+_CLOCK_SPAN = re.compile(r"\b(\d{1,2})\s*[:.\s]\s*(\d{2})\s*(am|pm)\b")
+
+
+def _op_state_values(goal: dict) -> set:
+    return {a.get("value") for t in goal.get("targets") or [] for a in t.get("asserts") or []
+            if str(a.get("attribute", "")).endswith("OperationalState.OperationalState")}
+
+
+def restore_stated_clock(compact: dict, query: str) -> tuple[dict, int]:
+    """Put back a clock time the user STATED but the parser left out (the counterpart of ground_ir).
+
+    In QT4-3 ("start the dryer at 6:56 PM ... pause it when dryer 2 finishes") the stated clock time is what
+    makes a request impossible; the 5-fold parsers often drop it and copy the request's consistent twin, so
+    Z3 sees no contradiction (17 of 36 in-scope impossible QT4-3 requests). This applies only to that shape
+    (a "by <goal>" deadline and a device-finish anchor, and no clock reading at all) and only to times with
+    AM/PM, placed as the benchmark's labels place them:
+      "start ... at T"  -> the goal that starts a machine (OperationalState 1);
+      "... by T"        -> the goal anchored on the other device's finish.
+    Other mentions ("I expect it to finish around T", "my call starts at T") are left alone. None of the 50
+    POSSIBLE QT4-3 requests states a clock time, so this cannot turn a possible request into an impossible
+    one there. Returns (copy, readings added)."""
+    goals = compact.get("goals") or []
+    readings = [r for g in goals for r in g.get("readings") or []]
+    has_deadline = any(r.get("relation") == "by" and (r.get("anchor") or {}).get("kind") == "goal" for r in readings)
+    has_device = any((r.get("anchor") or {}).get("kind") == "device_event" for r in readings)
+    if not (has_deadline and has_device) or any(r.get("absolute_time") for r in readings):
+        return compact, 0
+    text = _words_to_numbers(query or "").replace("p . m .", "pm").replace("a . m .", "am")
+    out = copy.deepcopy(compact)
+    added = 0
+    for m in _CLOCK_SPAN.finditer(text):
+        h, mi, mer = int(m.group(1)), int(m.group(2)), m.group(3)
+        if not (1 <= h <= 12 and 0 <= mi <= 59):
+            continue
+        h = (h % 12) + (12 if mer == "pm" else 0)
+        before = text[:m.start()]
+        clause = re.split(r"[.;,!?]| so | and ", before)[-1]
+        if re.search(r"\bat\s*$", clause) and re.search(r"\bstart\b", clause):
+            target = [g for g in out["goals"] if 1 in _op_state_values(g)]
+        elif re.search(r"\bby\s*$", clause):
+            target = [g for g in out["goals"] if any((r.get("anchor") or {}).get("kind") == "device_event"
+                                                     for r in g.get("readings") or [])]
+        else:
+            continue
+        if not target or any(r.get("absolute_time") for r in target[0].get("readings") or []):
+            continue
+        target[0]["readings"].append({"relation": "at", "anchor": {"kind": "now"}, "absolute_time": f"{h:02d}:{mi:02d}"})
+        added += 1
+    return out, added

@@ -24,6 +24,7 @@ import shutil
 import sys
 import tempfile
 import threading
+import time
 
 import _paths
 
@@ -36,6 +37,9 @@ class FakeLLM:
         self.model = "fake/scripted-agent"
 
     def generate(self, messages, response_format=None):
+        from irlib.parallel_runner import llm_wait
+        with llm_wait():  # as the notebook's shim does around every real LLM request (clock held meanwhile)
+            time.sleep(0.2)
         with self.lock:
             self.counter["agent"] += 1
         # The real task is the user turn after SimuHome's one-shot examples; tool results
@@ -88,7 +92,7 @@ def main(simuhome_dir: str) -> int:
 
     counter, lock = {"agent": 0, "judge": 0}, threading.Lock()
     out_root = tempfile.mkdtemp(prefix="approach2_e2e_")
-    servers = start_simulators(2, simuhome_dir)
+    servers = start_simulators(2, simuhome_dir, pausable=True)  # v2.2: clock held during LLM calls
     problems = []
 
     def run(arm, policy, names):
@@ -167,6 +171,10 @@ def main(simuhome_dir: str) -> int:
               f"time_rej={t['time_rejections']} dry_rej={t['dry_run_rejections']} passed={t['passed']}  scores={scores}")
         if sched_codes != [409, 200, 409, 200, 200] or t["time_rejections"] != 1 or t["dry_run_rejections"] != 1:
             problems.append(f"full: expected codes [409, 200, 409, 200, 200], got {sched_codes}; telemetry {t}")
+        from irlib.parallel_runner import CLOCK
+        print("clock holds:", CLOCK)
+        if CLOCK["holds"] == 0 or CLOCK["errors"]:
+            problems.append(f"clock hold did not work: {CLOCK}")
         if scores.get("qt4-1_feasible_seed_1") != 1:
             problems.append(f"full: the corrected plan should score 1 with SimuHome's scorer, got {scores}")
     finally:

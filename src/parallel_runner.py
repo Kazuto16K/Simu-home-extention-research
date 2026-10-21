@@ -12,6 +12,11 @@ Results are written exactly where and how SimuHome's evaluator writes them
 (`<output_root>/<run_id>/<safe model name>/<episode file name>`, same record and
 error-record format), so SimuHome's aggregator reads them unchanged.
 
+Clock hold (v2.2): with `start_simulators(..., pausable=True)` each server is `pausable_sim.py` (SimuHome's
+own server plus a clock-hold route). The notebook's LLM shim wraps every request in `llm_wait()`, which holds
+the clock of the simulator the CURRENT thread's episode uses, so the hosted LLM's latency does not age the
+agent's idea of "now" (see pausable_sim.py).
+
 Imports SimuHome lazily (call after SimuHome is on sys.path, with cwd = SimuHome).
 """
 
@@ -26,8 +31,48 @@ import sys
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Callable, Optional
+
+_TLS = threading.local()  # .port = the simulator of the episode running in this thread
+CLOCK = {"hold": False, "holds": 0, "errors": 0, "held_seconds": 0.0}
+
+
+def _clock(port: int, hold: bool) -> None:
+    import requests
+
+    r = requests.post(f"http://127.0.0.1:{port}/api/__clock__", json={"hold": hold}, timeout=10)
+    r.raise_for_status()
+
+
+@contextmanager
+def llm_wait():
+    """Hold this thread's simulator clock for the duration of an LLM request (no-op when holding is off,
+    outside an episode, or if the server cannot be reached: then the clock simply keeps running)."""
+    port = getattr(_TLS, "port", None)
+    if not CLOCK["hold"] or port is None:
+        yield
+        return
+    held, t0 = False, time.time()
+    try:
+        _clock(port, True)
+        held = True
+        CLOCK["holds"] += 1
+    except Exception:
+        CLOCK["errors"] += 1
+    try:
+        yield
+    finally:
+        if held:
+            CLOCK["held_seconds"] += time.time() - t0
+            for attempt in range(3):
+                try:
+                    _clock(port, False)
+                    break
+                except Exception:
+                    CLOCK["errors"] += 1
+                    time.sleep(1)
 
 
 def _free_port() -> int:
@@ -36,17 +81,20 @@ def _free_port() -> int:
         return int(s.getsockname()[1])
 
 
-def start_simulators(n: int, simuhome_dir: str = ".", wait_seconds: float = 60.0, log_dir: Optional[str] = None):
-    """Start n SimuHome simulator servers; returns [(port, Popen)]."""
+def start_simulators(n: int, simuhome_dir: str = ".", wait_seconds: float = 60.0, log_dir: Optional[str] = None,
+                     pausable: bool = False):
+    """Start n SimuHome simulator servers; returns [(port, Popen)]. `pausable`: run them through
+    pausable_sim.py (SimuHome's server + a clock-hold route) and turn clock holding on for `llm_wait`."""
     import requests
 
     servers = []
+    launcher = os.path.join(os.path.dirname(os.path.abspath(__file__)), "pausable_sim.py")
+    cmd = [sys.executable, launcher] if pausable else [sys.executable, "-m", "src.simulator.api.app"]
     for i in range(n):
         port = _free_port()
         env = dict(os.environ, SERVER_PORT=str(port))
         log = open(os.path.join(log_dir, f"sim_{port}.log"), "w") if log_dir else subprocess.DEVNULL
-        proc = subprocess.Popen([sys.executable, "-m", "src.simulator.api.app"], cwd=simuhome_dir, env=env,
-                                stdout=log, stderr=subprocess.STDOUT)
+        proc = subprocess.Popen(cmd, cwd=simuhome_dir, env=env, stdout=log, stderr=subprocess.STDOUT)
         servers.append((port, proc))
     deadline = time.time() + wait_seconds
     for port, proc in servers:
@@ -61,6 +109,10 @@ def start_simulators(n: int, simuhome_dir: str = ".", wait_seconds: float = 60.0
             if time.time() > deadline:
                 raise RuntimeError(f"simulator on port {port} did not come up in {wait_seconds:.0f} s")
             time.sleep(0.5)
+    if pausable:  # the route must exist, or holding would silently do nothing
+        for port, _ in servers:
+            _clock(port, False)
+    CLOCK["hold"] = bool(pausable)
     return servers
 
 
@@ -97,6 +149,7 @@ def run_episodes(
     timeout: float = 120.0,
     on_episode_start: Optional[Callable[[str], None]] = None,
     skip_done: bool = True,
+    stop_at: Optional[float] = None,
     log: Callable[[str], None] = print,
 ) -> dict:
     """Run every episode in `cfg_paths` with len(servers) workers. Returns counts."""
@@ -112,7 +165,7 @@ def run_episodes(
     ports: "queue.Queue[int]" = queue.Queue()
     for port, _ in servers:
         ports.put(port)
-    counts = {"total": len(cfg_paths), "skipped": 0, "success": 0, "failed": 0}
+    counts = {"total": len(cfg_paths), "skipped": 0, "success": 0, "failed": 0, "not_started": 0}
     lock = threading.Lock()
     t_start = time.time()
 
@@ -122,7 +175,12 @@ def run_episodes(
             with lock:
                 counts["skipped"] += 1
             return
+        if stop_at is not None and time.time() > stop_at:  # time budget: leave it for the next session
+            with lock:
+                counts["not_started"] += 1
+            return
         port = ports.get()
+        _TLS.port = port
         try:
             if on_episode_start:
                 on_episode_start(f"{run_id}/{cfg_path.stem}")
@@ -147,6 +205,7 @@ def run_episodes(
                     counts["failed"] += 1
                 log(f"  {cfg_path.stem}: FAILED {error_type}: {str(exc)[:160]}")
         finally:
+            _TLS.port = None
             ports.put(port)
 
     with ThreadPoolExecutor(max_workers=max(1, len(servers))) as pool:
