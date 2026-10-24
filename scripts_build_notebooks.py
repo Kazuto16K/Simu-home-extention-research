@@ -498,8 +498,11 @@ nb_e1 = [
         "import time, threading, copy",
         "# ============================ EDIT THIS BLOCK ONLY ============================",
         "LLM_API_BASE = 'https://integrate.api.nvidia.com/v1'",
-        "LLM_MODEL = 'google/gemma-4-31b-it'      # the agent; change per notebook for a multi-model study",
-        "JUDGE_MODEL = 'google/gemma-4-31b-it'    # scores infeasible episodes (3 calls each); keep fixed across arms",
+        "# Gemma-4-31B (sessions 1-2) stopped responding on NVIDIA's free endpoint (Oct 2026). Llama-3.2-11B is the only",
+        "# NON-reasoning chat model that answers there (1-2 s per agent-sized prompt, JSON first). The judge must also be",
+        "# non-reasoning: SimuHome reads only the FIRST LETTER of each judge reply ('A' or 'B').",
+        "LLM_MODEL = 'meta/llama-3.2-11b-vision-instruct'     # the agent",
+        "JUDGE_MODEL = 'meta/llama-3.2-11b-vision-instruct'   # scores infeasible episodes (3 calls each); fixed across arms",
         "LLM_API_KEY_ENV = 'NVIDIA_API_KEY'       # Kaggle secret name",
         "KEY_RPM = 40                             # the key's requests-per-minute limit",
         "NOTEBOOKS_SHARING_KEY = 1                # notebooks using this key at the same time",
@@ -702,7 +705,7 @@ nb_e1 = [
         "",
         "# ============================ EDIT THIS BLOCK ONLY ============================",
         "NUM_SHARDS, SHARD = 2, 0   # run SHARD = 0 and SHARD = 1 (two sessions, or two keys at once). 1, 0 = everything here",
-        "WORKERS = 3               # episodes at once. With the clock held, waiting no longer changes results; more workers",
+        "WORKERS = 4               # episodes at once. With the clock held, waiting no longer changes results; more workers",
         "                          # mean more requests in flight, and the free endpoint then times out more (session 3: 4 was too many)",
         "BUDGET_HOURS = 11.3       # Kaggle stops a session at 12 h; no episode starts after this",
         "CLOCK_HOLD = True         # hold each simulator's clock during its agent's LLM calls (see the header). Keep True",
@@ -767,6 +770,15 @@ nb_e1 = [
         "tel_file = os.path.join(PROJECT_ROOT, f'gate_telemetry_{SESSION}.json')",
         "log_file = os.path.join(PROJECT_ROOT, f'e1_run_log_{SESSION}.json')",
         "run_log = []",
+        "def checkpoint():",
+        "    # Results zip written after EVERY run block (overwritten each time), so a session that stops suddenly",
+        "    # still leaves everything finished so far in /kaggle/working. Attach it to the next session to resume.",
+        "    out = os.path.join(WORK, f'approach2_results_{SESSION}.zip')",
+        "    with zipfile.ZipFile(out + '.tmp', 'w', zipfile.ZIP_DEFLATED) as z:",
+        "        for p in [tel_file, log_file] + glob.glob(os.path.join(PROJECT_ROOT, 'SimuHome/experiments/a2_*/*/*.json')):",
+        "            if os.path.isfile(p):",
+        "                z.write(p, os.path.relpath(p, PROJECT_ROOT))",
+        "    os.replace(out + '.tmp', out)",
         "servers = start_simulators(WORKERS, '.', log_dir=None, pausable=CLOCK_HOLD)",
         "print(f'{len(servers)} simulators up on ports', [p for p, _ in servers], '| clock hold', 'ON' if CLOCK['hold'] else 'OFF')",
         "T0 = time.time(); STOP_AT = T0 + BUDGET_HOURS * 3600",
@@ -797,6 +809,7 @@ nb_e1 = [
         "        run_log.append(entry)",
         "        json.dump(run_log, open(log_file, 'w'), indent=2)",
         "        json.dump(harness.telemetry, open(tel_file, 'w'), indent=2, default=str)",
+        "        checkpoint()",
         "        print(f\"   {entry['seconds'] // 60} min | {entry['llm_calls']} LLM calls | new {entry.get('success', 0)}, skipped (done) \"",
         "              f\"{entry.get('skipped', 0)}, failed {entry.get('failed', 0)}, not started {entry.get('not_started', 0)}\")",
         "finally:",
@@ -857,3 +870,291 @@ if __name__ == "__main__":
                            "they are the full experiment. Attach `parse_cache_v3_cv.json`, and to continue an unfinished part, also",
                            f"attach that part's last `approach2_results_*_shard{shard}.zip`."))
         save(f"00_approach2_part{part}.ipynb", cells)
+
+    # Self-hosted variants (Kaggle GPU T4 x2): the agent and judge run on a local Ollama server, so there is no
+    # API key, no rate limit and no dependence on NVIDIA's free endpoint.
+    LOCAL_MODEL_TAG = "qwen2.5:14b-instruct"   # Ollama registry tag (4-bit, about 9 GB)
+    ollama_cells = [
+        md("## 3a. Local LLM server (Ollama on the two T4 GPUs)",
+           "",
+           "Installs Ollama, starts its OpenAI-compatible server on port 11434, downloads the agent model once",
+           f"(`{LOCAL_MODEL_TAG}`, about 9 GB, a few minutes) and registers it with a 32k-token context. The agent,",
+           "the judges and the gate code are unchanged: only the API address and model name differ.",
+           "**Session settings: Accelerator = GPU T4 x2, Internet ON.** No API key or secret is needed."),
+        code(
+            "import os, subprocess, time, json, urllib.request",
+            "# ============================ EDIT ONLY IF NEEDED ============================",
+            f"OLLAMA_MODEL = '{LOCAL_MODEL_TAG}'   # non-reasoning instruct model; 'qwen2.5:7b-instruct' is ~2x faster but weaker",
+            "NUM_CTX = 32768        # tokens per request; SimuHome agent prompts grow to ~15-30k tokens late in an episode",
+            "PARALLEL = 2           # requests served at once (each holds a 32k-token cache; 2 fit next to the model on 2 x T4)",
+            "# ==============================================================================",
+            "!nvidia-smi --query-gpu=name,memory.total --format=csv",
+            "!apt-get -qq update >/dev/null 2>&1; apt-get -qq install -y zstd pciutils lshw >/dev/null 2>&1",
+            "if subprocess.run(['which', 'ollama'], capture_output=True).returncode != 0:",
+            "    !curl -fsSL https://ollama.com/install.sh | sh",
+            "env = dict(os.environ, OLLAMA_HOST='127.0.0.1:11434', OLLAMA_NUM_PARALLEL=str(PARALLEL), OLLAMA_MAX_LOADED_MODELS='1',",
+            "           OLLAMA_SCHED_SPREAD='1', OLLAMA_KEEP_ALIVE='24h', OLLAMA_CONTEXT_LENGTH=str(NUM_CTX))",
+            "ollama_log = open('/kaggle/working/ollama.log' if os.path.isdir('/kaggle/working') else 'ollama.log', 'w')",
+            "ollama_proc = subprocess.Popen(['ollama', 'serve'], env=env, stdout=ollama_log, stderr=subprocess.STDOUT)",
+            "for _ in range(60):",
+            "    try:",
+            "        urllib.request.urlopen('http://127.0.0.1:11434/api/tags', timeout=2); break",
+            "    except Exception:",
+            "        time.sleep(1)",
+            "else:",
+            "    raise RuntimeError('ollama did not start; see ollama.log')",
+            "t0 = time.time()",
+            "!ollama pull {OLLAMA_MODEL}",
+            "print(f'model downloaded in {time.time() - t0:.0f} s')",
+            "# A named copy with the context length fixed (Ollama's OpenAI endpoint cannot set num_ctx per request,",
+            "# and its small default would silently cut the agent's long prompts).",
+            "open('Modelfile', 'w').write(f'FROM {OLLAMA_MODEL}\\nPARAMETER num_ctx {NUM_CTX}\\n')",
+            "!ollama create simuhome-agent -f Modelfile",
+            "os.environ['LOCAL_LLM_KEY'] = 'ollama'   # the OpenAI client needs some key; Ollama ignores it",
+            "t0 = time.time()",
+            "req = urllib.request.Request('http://127.0.0.1:11434/v1/chat/completions', method='POST',",
+            "    headers={'Content-Type': 'application/json'},",
+            "    data=json.dumps({'model': 'simuhome-agent', 'temperature': 0, 'messages': [{'role': 'user', 'content': 'Reply with OK'}]}).encode())",
+            "print('warm-up reply:', json.loads(urllib.request.urlopen(req, timeout=600).read())['choices'][0]['message']['content'][:40],",
+            "      f'({time.time() - t0:.0f} s, includes loading the model onto the GPUs)')",
+            "!nvidia-smi --query-gpu=index,memory.used,memory.total --format=csv",
+        ),
+    ]
+    local_subs = [
+        ("LLM_API_BASE = 'https://integrate.api.nvidia.com/v1'", "LLM_API_BASE = 'http://127.0.0.1:11434/v1'   # local Ollama server (section 3a)"),
+        ("LLM_MODEL = 'meta/llama-3.2-11b-vision-instruct'     # the agent",
+         f"LLM_MODEL = 'simuhome-agent'          # the agent: {LOCAL_MODEL_TAG} served locally (section 3a)"),
+        ("JUDGE_MODEL = 'meta/llama-3.2-11b-vision-instruct'   # scores infeasible episodes (3 calls each); fixed across arms",
+         "JUDGE_MODEL = 'simuhome-agent'        # scores infeasible episodes (3 calls each); fixed across arms"),
+        ("LLM_API_KEY_ENV = 'NVIDIA_API_KEY'       # Kaggle secret name", "LLM_API_KEY_ENV = 'LOCAL_LLM_KEY'        # set in section 3a; no secret needed"),
+        ("KEY_RPM = 40                             # the key's requests-per-minute limit",
+         "KEY_RPM = 100000                         # local server: no rate limit (the shim's spacing becomes negligible)"),
+        ("REQUEST_TIMEOUT = 120     # a normal call takes 20-60 s; one still running after 2 min is stuck: give up and retry",
+         "REQUEST_TIMEOUT = 900     # local GPU: a long prompt can take minutes while the other slot is busy; never retry early"),
+        ("WORKERS = 4               # episodes at once.", "WORKERS = 2               # episodes at once (= PARALLEL in section 3a)."),
+        ("BUDGET_HOURS = 11.3       # Kaggle stops a session at 12 h; no episode starts after this",
+         "BUDGET_HOURS = 10.8       # Kaggle stops a session at 12 h; setup + model download take ~20 min of it"),
+    ]
+    for shard, part in ((0, "A"), (1, "B")):
+        cells = json.loads(json.dumps(nb_e1))
+        for c in cells:
+            src = "".join(c["source"])
+            src = src.replace("NUM_SHARDS, SHARD = 2, 0   # run SHARD = 0 and SHARD = 1 (two sessions, or two keys at once). 1, 0 = everything here",
+                              f"NUM_SHARDS, SHARD = 2, {shard}   # PART {part} of 2: do not change (the other part runs the other half)")
+            for a, b in local_subs:
+                src = src.replace(a, b)
+            c["source"] = src.splitlines(keepends=True)
+        at = next(i for i, c in enumerate(cells) if c["cell_type"] == "markdown" and "## 3. Agent LLM backend" in "".join(c["source"]))
+        cells[at:at] = json.loads(json.dumps(ollama_cells))
+        cells.insert(0, md(f"# PART {part} of 2, self-hosted agent (shard {shard})",
+                           "",
+                           f"Agent and judge: `{LOCAL_MODEL_TAG}` on a local Ollama server on Kaggle's **GPU T4 x2** (section 3a).",
+                           "No API key is used. Run part A and part B at the same time in two GPU sessions; each does half of the",
+                           "episodes of EVERY cell and arm. Attach only `parse_cache_v3_cv.json` (and, to continue an unfinished",
+                           f"part, that part's last `approach2_results_*_shard{shard}.zip`)."))
+        txt = "".join("".join(c["source"]) for c in cells)
+        missing = [a for a, b in local_subs if b not in txt]
+        assert not missing, f"local substitutions not applied: {missing}"
+        save(f"00_approach2_local_part{part}.ipynb", cells)
+
+    # ---------------------------------------------------------------------------------------------------------------
+    # Shared-server setup: ONE Kaggle GPU notebook serves the model through a tunnel; parts A and B (CPU notebooks)
+    # call it over HTTPS. (Kaggle allows one T4 session at a time.)
+    # ---------------------------------------------------------------------------------------------------------------
+    nb_server = [
+        md("# LLM server for parts A and B (Kaggle GPU T4 x2)",
+           "",
+           "Serves the agent model to `00_approach2_remote_partA` and `..._partB` (CPU notebooks) over a public HTTPS",
+           "tunnel. Steps: install Ollama, download the model, start a small proxy that (1) requires a secret token and",
+           "(2) keeps slow requests alive, then open a Cloudflare quick tunnel to it (no account needed).",
+           "",
+           "**Settings:** Accelerator **GPU T4 x2**, Internet ON. Run it as *Save Version -> Save & Run All* (it keeps",
+           "serving for `SERVE_HOURS`), or interactively with the tab open. When section 3 prints the **URL** and",
+           "**TOKEN**, put them into the A and B notebooks (Kaggle secrets `LLM_SERVER_URL` and `LLM_SERVER_TOKEN`).",
+           "Every restart gives a NEW url and token."),
+        md("## 1. Model on the local Ollama server"),
+        code(
+            "import os, subprocess, time, json, urllib.request, urllib.error",
+            "# ============================ EDIT ONLY IF NEEDED ============================",
+            f"OLLAMA_MODEL = '{LOCAL_MODEL_TAG}'   # non-reasoning instruct; alternatives: 'qwen2.5:7b-instruct' (2x faster), 'llama3.1:8b-instruct-q8_0'",
+            "NUM_CTX = 32768        # tokens per request; SimuHome agent prompts grow to ~15-30k tokens",
+            "PARALLEL = 2           # requests computed at once (each holds a 32k-token cache); others wait in a queue",
+            "SERVE_HOURS = 11.5     # Kaggle ends a session at 12 h",
+            "# ==============================================================================",
+            "!nvidia-smi --query-gpu=name,memory.total --format=csv",
+            "!apt-get -qq update >/dev/null 2>&1; apt-get -qq install -y zstd pciutils lshw >/dev/null 2>&1",
+            "if subprocess.run(['which', 'ollama'], capture_output=True).returncode != 0:",
+            "    !curl -fsSL https://ollama.com/install.sh | sh",
+            "env = dict(os.environ, OLLAMA_HOST='127.0.0.1:11434', OLLAMA_NUM_PARALLEL=str(PARALLEL), OLLAMA_MAX_LOADED_MODELS='1',",
+            "           OLLAMA_MAX_QUEUE='512', OLLAMA_SCHED_SPREAD='1', OLLAMA_KEEP_ALIVE='24h', OLLAMA_CONTEXT_LENGTH=str(NUM_CTX))",
+            "ollama_proc = subprocess.Popen(['ollama', 'serve'], env=env, stdout=open('ollama.log', 'w'), stderr=subprocess.STDOUT)",
+            "for _ in range(60):",
+            "    try:",
+            "        urllib.request.urlopen('http://127.0.0.1:11434/api/tags', timeout=2); break",
+            "    except Exception:",
+            "        time.sleep(1)",
+            "else:",
+            "    raise RuntimeError('ollama did not start; see ollama.log')",
+            "!ollama pull {OLLAMA_MODEL}",
+            "open('Modelfile', 'w').write(f'FROM {OLLAMA_MODEL}\\nPARAMETER num_ctx {NUM_CTX}\\n')",
+            "!ollama create simuhome-agent -f Modelfile",
+            "t0 = time.time()",
+            "req = urllib.request.Request('http://127.0.0.1:11434/v1/chat/completions', method='POST', headers={'Content-Type': 'application/json'},",
+            "    data=json.dumps({'model': 'simuhome-agent', 'temperature': 0, 'messages': [{'role': 'user', 'content': 'Reply with OK'}]}).encode())",
+            "print('warm-up reply:', json.loads(urllib.request.urlopen(req, timeout=900).read())['choices'][0]['message']['content'][:40],",
+            "      f'({time.time() - t0:.0f} s, includes loading the model onto the GPUs)')",
+            "!nvidia-smi --query-gpu=index,memory.used,memory.total --format=csv",
+        ),
+        md("## 2. Proxy: token check + keep-alive",
+           "",
+           "Cloudflare's quick tunnel drops a request that sends nothing for 100 s, and a long prompt can take longer on",
+           "a T4. The proxy answers at once with HTTP 200 and sends a space every 15 s until the model's JSON is ready",
+           "(leading spaces are valid JSON, so the OpenAI client reads the reply unchanged). Fast replies and errors",
+           "(within 15 s) are passed through with their real status code."),
+        code(
+            "import http.server, secrets, threading",
+            "TOKEN = secrets.token_urlsafe(24)",
+            "OLLAMA = 'http://127.0.0.1:11434'",
+            "STATS = {'requests': 0, 'denied': 0, 'errors': 0, 'busy_seconds': 0.0}",
+            "",
+            "class Proxy(http.server.BaseHTTPRequestHandler):",
+            "    protocol_version = 'HTTP/1.0'   # the reply ends when the connection closes: no length needed up front",
+            "    def log_message(self, *a):",
+            "        pass",
+            "    def _ok_token(self):",
+            "        if self.headers.get('Authorization', '') == f'Bearer {TOKEN}':",
+            "            return True",
+            "        STATS['denied'] += 1",
+            "        self.send_response(401); self.send_header('Content-Type', 'application/json'); self.end_headers()",
+            "        self.wfile.write(b'{\"error\": {\"message\": \"bad token\"}}')",
+            "        return False",
+            "    def _forward(self, method, body=None):",
+            "        out = {}",
+            "        def work():",
+            "            try:",
+            "                r = urllib.request.Request(OLLAMA + self.path, data=body, method=method, headers={'Content-Type': 'application/json'})",
+            "                with urllib.request.urlopen(r, timeout=6 * 3600) as resp:",
+            "                    out['status'], out['body'] = resp.status, resp.read()",
+            "            except urllib.error.HTTPError as e:",
+            "                out['status'], out['body'] = e.code, e.read()",
+            "            except Exception as e:",
+            "                out['status'], out['body'] = 502, json.dumps({'error': {'message': repr(e)[:300]}}).encode()",
+            "        t0 = time.time(); th = threading.Thread(target=work, daemon=True); th.start(); th.join(15)",
+            "        try:",
+            "            if not th.is_alive():",
+            "                self.send_response(out['status'])",
+            "                self.send_header('Content-Type', 'application/json'); self.end_headers()",
+            "                self.wfile.write(out['body'])",
+            "            else:",
+            "                self.send_response(200); self.send_header('Content-Type', 'application/json'); self.end_headers()",
+            "                while th.is_alive():",
+            "                    self.wfile.write(b' '); self.wfile.flush(); th.join(15)",
+            "                self.wfile.write(out['body'])",
+            "            if out.get('status', 200) >= 400:",
+            "                STATS['errors'] += 1",
+            "        except (BrokenPipeError, ConnectionResetError):",
+            "            STATS['errors'] += 1   # the client gave up; its request still ran",
+            "        STATS['busy_seconds'] += time.time() - t0",
+            "    def do_GET(self):",
+            "        if self.path == '/health':",
+            "            self.send_response(200); self.end_headers(); self.wfile.write(b'ok'); return",
+            "        if self._ok_token():",
+            "            self._forward('GET')",
+            "    def do_POST(self):",
+            "        if self._ok_token():",
+            "            STATS['requests'] += 1",
+            "            self._forward('POST', self.rfile.read(int(self.headers.get('Content-Length', 0))))",
+            "",
+            "server = http.server.ThreadingHTTPServer(('127.0.0.1', 8000), Proxy)",
+            "threading.Thread(target=server.serve_forever, daemon=True).start()",
+            "print('proxy up on 127.0.0.1:8000')",
+        ),
+        md("## 3. Public tunnel: copy the URL and TOKEN printed below"),
+        code(
+            "import re",
+            "if not os.path.exists('cloudflared'):",
+            "    !wget -q -O cloudflared https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64",
+            "    !chmod +x cloudflared",
+            "tunnel = subprocess.Popen(['./cloudflared', 'tunnel', '--no-autoupdate', '--url', 'http://127.0.0.1:8000'],",
+            "                          stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)",
+            "URL = None",
+            "for line in tunnel.stdout:",
+            "    m = re.search(r'https://[a-z0-9-]+\\.trycloudflare\\.com', line)",
+            "    if m:",
+            "        URL = m.group(0); break",
+            "threading.Thread(target=lambda: [None for _ in tunnel.stdout], daemon=True).start()   # keep draining its log",
+            "time.sleep(8)   # the address needs a few seconds to become reachable",
+            "print('=' * 70)",
+            "print('LLM_SERVER_URL   =', URL)",
+            "print('LLM_SERVER_TOKEN =', TOKEN)",
+            "print('=' * 70)",
+            "print('Put both into parts A and B as Kaggle secrets (Add-ons -> Secrets) with exactly these names.')",
+            "# self-test through the tunnel, the way parts A and B will call it",
+            "req = urllib.request.Request(URL + '/v1/chat/completions', method='POST',",
+            "    headers={'Content-Type': 'application/json', 'Authorization': f'Bearer {TOKEN}'},",
+            "    data=json.dumps({'model': 'simuhome-agent', 'temperature': 0, 'messages': [{'role': 'user', 'content': 'Reply with OK'}]}).encode())",
+            "for attempt in range(6):",
+            "    try:",
+            "        print('tunnel self-test:', json.loads(urllib.request.urlopen(req, timeout=300).read())['choices'][0]['message']['content'][:40]); break",
+            "    except Exception as e:",
+            "        print('tunnel not ready yet:', repr(e)[:120]); time.sleep(10)",
+        ),
+        md("## 4. Keep serving (this cell runs until `SERVE_HOURS`; stop it to shut the server down)"),
+        code(
+            "T0 = time.time()",
+            "while time.time() - T0 < SERVE_HOURS * 3600:",
+            "    time.sleep(300)",
+            "    if ollama_proc.poll() is not None:",
+            "        print('ollama exited; restarting'); ollama_proc = subprocess.Popen(['ollama', 'serve'], env=env, stdout=open('ollama.log', 'a'), stderr=subprocess.STDOUT)",
+            "    if tunnel.poll() is not None:",
+            "        print('TUNNEL DIED: restart this notebook (it will print a new URL and token)'); break",
+            "    print(time.strftime('%H:%M'), f'{(time.time() - T0) / 3600:.1f} h | requests {STATS[\"requests\"]} | errors {STATS[\"errors\"]} | '",
+            "          f'denied {STATS[\"denied\"]} | GPU busy ~{STATS[\"busy_seconds\"] / max(1, time.time() - T0):.1f} requests in flight on average', flush=True)",
+        ),
+    ]
+    save("02_llm_server.ipynb", nb_server)
+
+    remote_subs = [
+        ("LLM_API_BASE = 'https://integrate.api.nvidia.com/v1'",
+         "LLM_API_BASE = ''   # '' = read Kaggle secret LLM_SERVER_URL (printed by 02_llm_server); or paste the https://...trycloudflare.com URL\n"
+         "try:\n"
+         "    from kaggle_secrets import UserSecretsClient as _USC\n"
+         "    LLM_API_BASE = LLM_API_BASE or _USC().get_secret('LLM_SERVER_URL')\n"
+         "except Exception:\n"
+         "    pass\n"
+         "assert LLM_API_BASE, 'set the Kaggle secret LLM_SERVER_URL (or paste the URL above)'\n"
+         "LLM_API_BASE = LLM_API_BASE.strip().rstrip('/')\n"
+         "LLM_API_BASE += '' if LLM_API_BASE.endswith('/v1') else '/v1'"),
+        ("LLM_MODEL = 'meta/llama-3.2-11b-vision-instruct'     # the agent",
+         f"LLM_MODEL = 'simuhome-agent'          # the agent: {LOCAL_MODEL_TAG}, served by 02_llm_server"),
+        ("JUDGE_MODEL = 'meta/llama-3.2-11b-vision-instruct'   # scores infeasible episodes (3 calls each); fixed across arms",
+         "JUDGE_MODEL = 'simuhome-agent'        # scores infeasible episodes (3 calls each); fixed across arms"),
+        ("LLM_API_KEY_ENV = 'NVIDIA_API_KEY'       # Kaggle secret name",
+         "LLM_API_KEY_ENV = 'LLM_SERVER_TOKEN'     # Kaggle secret: the TOKEN printed by 02_llm_server"),
+        ("KEY_RPM = 40                             # the key's requests-per-minute limit",
+         "KEY_RPM = 100000                         # own server: no rate limit"),
+        ("REQUEST_TIMEOUT = 120     # a normal call takes 20-60 s; one still running after 2 min is stuck: give up and retry",
+         "REQUEST_TIMEOUT = 3600    # one GPU serves parts A and B: a request may wait in its queue; the server keeps it alive"),
+        ("WORKERS = 4               # episodes at once.", "WORKERS = 2               # episodes at once (both parts share one GPU)."),
+    ]
+    for shard, part in ((0, "A"), (1, "B")):
+        cells = json.loads(json.dumps(nb_e1))
+        for c in cells:
+            src = "".join(c["source"])
+            src = src.replace("NUM_SHARDS, SHARD = 2, 0   # run SHARD = 0 and SHARD = 1 (two sessions, or two keys at once). 1, 0 = everything here",
+                              f"NUM_SHARDS, SHARD = 2, {shard}   # PART {part} of 2: do not change (the other part runs the other half)")
+            for a, b in remote_subs:
+                src = src.replace(a, b)
+            c["source"] = src.splitlines(keepends=True)
+        cells.insert(0, md(f"# PART {part} of 2, agent on our own GPU server (shard {shard})",
+                           "",
+                           "Start `02_llm_server` first (GPU T4 x2). It prints a URL and a TOKEN: add them to THIS notebook as",
+                           "Kaggle secrets `LLM_SERVER_URL` and `LLM_SERVER_TOKEN`. This notebook needs no GPU: run it on **CPU**,",
+                           "Internet ON, with `parse_cache_v3_cv.json` attached (to continue an unfinished part, also attach that",
+                           f"part's last `approach2_results_*_shard{shard}.zip`). Part A and part B run at the same time."))
+        txt = "".join("".join(c["source"]) for c in cells)
+        missing = [a for a, b in remote_subs if b not in txt]
+        assert not missing, f"remote substitutions not applied: {missing}"
+        save(f"00_approach2_remote_part{part}.ipynb", cells)
+
+

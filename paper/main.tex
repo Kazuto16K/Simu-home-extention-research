@@ -45,11 +45,11 @@ either proves the request contradictory or computes an allowed time window for e
 Contradictory requests are answered without any large-model call, or the agent is warned once. While the agent
 works, every scheduling call is checked against these windows and dry-run on a copy of the home, and refused
 calls come back with an actionable fix: the correct time range, the device's real command signature, or the
-state that makes the action a no-op. With a 5-fold cross-validated parser, \sys{} judges all 148 scored possible
-requests as possible and proves 129 of 136 in-scope contradictions. In a preliminary evaluation it detects every
-QT4-1 and QT4-2 contradiction with zero large-model calls, and replaying 188 real scheduling calls shows that it
-flags the agent's mistake in 52 of 62 failed episodes while blocking one of 29 correct plans. \tbd{Full paired
-results on possible requests: to be added.}
+state that makes the action a no-op. On all 300 SimuHome scheduling episodes with a Qwen2.5-14B agent and a
+5-fold cross-validated parser, \sys{} handles 130 of 150 contradictory requests correctly (agent alone: 9; a
+self-check prompt: 19), with almost no large-model calls on two of three sub-types, and completes 15 of 148
+feasible requests against 2 for the agent alone and 1 with self-check ($p<0.001$, paired). Almost every gain on
+feasible requests follows a refusal that showed the agent the device's real command signature.
 \end{abstract}
 
 \keywords{LLM agents; runtime verification; neuro-symbolic AI; small--large model collaboration; SMT;
@@ -269,9 +269,12 @@ request and all dry runs of an episode a few seconds.
 
 \paragraph{Benchmark and agent.} We use all 300 QT4 episodes of SimuHome. Fourteen QT4-3 infeasible episodes are
 conflicts between a device's run-time model and a pause request; they are outside \sys{}'s temporal formalization
-and are reported but counted as out of scope. The agent is SimuHome's ReAct agent with Gemma-4-31B-it, accessed
-through a hosted API at temperature 0, with SimuHome's default step limit. Infeasible episodes are scored by
-SimuHome's panel of three LLM judges (the same model).
+and are reported but counted as out of scope. The agent is SimuHome's ReAct agent with its default step limit,
+at temperature 0. The main evaluation uses Qwen2.5-14B-Instruct (4-bit, served locally with Ollama on two T4
+GPUs), a non-reasoning instruction-tuned model; the preliminary runs used Gemma-4-31B-it through a hosted API,
+which became unavailable during the study. Infeasible episodes are scored by SimuHome's panel of three LLM
+judges, using the agent's model; SimuHome reads only the first letter of each verdict, which rules out reasoning
+models as judges.
 
 \paragraph{Arms.} We compare four configurations on the same episodes: the agent alone; the agent with a one-line
 \emph{self-check} instruction to verify all times and report contradictions; \sys{} in hint mode; and \sys{} in
@@ -288,7 +291,9 @@ were minutes early, independently of the method. We therefore stop each simulato
 for an LLM response, for all arms alike. Tool calls, the gate's own work and the scorer run on the normal clock.
 
 \paragraph{Metrics.} Success rate per (sub-type, case), goals met on feasible requests, and large-model calls
-per episode. Arms are compared episode by episode with McNemar's exact test~\cite{mcnemar1947}.
+per episode. Arms are compared episode by episode with McNemar's exact test~\cite{mcnemar1947}. SimuHome marks an
+episode as an infrastructure error, not a failure, when the agent exhausts its steps without a final answer or
+a service fails; we count these as failures (strict scoring). Excluding them instead gives the same conclusions.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Results}
@@ -368,29 +373,51 @@ learns about them. In QT4-3 the agent computed the coordinating device's finish 
 
 \subsection{Full Paired Evaluation}
 
-\tbd{To be completed with the latency-controlled run on all 298 parsed episodes (both shards).}
-Table~\ref{tab:full} will report, for each sub-type, success on possible and impossible requests, goals met, and
-large-model calls for all arms, with McNemar tests of \sys{} against the agent alone and against self-check.
+Table~\ref{tab:full} reports the latency-controlled evaluation on all 300 episodes (about 50 per cell) with the
+Qwen2.5-14B agent; every arm ran on the same episodes.
 
 \begin{table}[t]
-  \caption{Full paired evaluation, latency-controlled (\tbd{to be filled}).}
+  \caption{Full paired evaluation (Qwen2.5-14B agent, strict scoring). Large-model calls per episode in
+  parentheses. *14 of 50 impossible QT4-3 episodes are out of scope (maximum 36/50).}
   \label{tab:full}
   \centering\small
+  \setlength{\tabcolsep}{4pt}
   \begin{tabular}{llccc}
     \toprule
-    Case & Arm & QT4-1 & QT4-2 & QT4-3 \\
+    Case & Arm & QT4-1 & QT4-2 & QT4-3 \
     \midrule
-    \multirow{3}{*}{Possible} & Agent alone & \tbd{--} & \tbd{--} & \tbd{--} \\
-     & Self-check & \tbd{--} & \tbd{--} & \tbd{--} \\
-     & \sys{} & \tbd{--} & \tbd{--} & \tbd{--} \\
+    \multirow{3}{*}{Possible} & Agent alone & 0/49 & 2/49 & 0/50 \
+     & Self-check & 0/49 & 1/49 & 0/50 \
+     & \sys{} & \textbf{6/49} & \textbf{9/49} & 0/50 \
     \midrule
-    \multirow{4}{*}{Impossible} & Agent alone & \tbd{--} & \tbd{--} & \tbd{--} \\
-     & Self-check & \tbd{--} & \tbd{--} & \tbd{--} \\
-     & \sys{}, hint & \tbd{--} & \tbd{--} & \tbd{--} \\
-     & \sys{}, answer & \tbd{--} & \tbd{--} & \tbd{--} \\
+    \multirow{4}{*}{Impossible} & Agent alone & 3/50 (4.3) & 5/50 (7.1) & 1/50* (7.5) \
+     & Self-check & 5/50 (4.3) & 11/50 (7.6) & 3/50* (7.7) \
+     & \sys{}, hint & \textbf{49/50} (1.1) & \textbf{50/50} (2.0) & \textbf{30/50}* (4.9) \
+     & \sys{}, answer & \textbf{49/50} (0.1) & \textbf{50/50} (0.0) & \textbf{31/50}* (3.1) \
     \bottomrule
   \end{tabular}
 \end{table}
+
+\paragraph{Impossible requests.} \sys{} handles 129 (hint) and 130 (answer) of 150 contradictory requests
+correctly, against 9 for the agent alone and 19 with the self-check prompt ($p<10^{-30}$ for each comparison,
+McNemar, pooled; $p<10^{-7}$ in every sub-type). In answer mode, QT4-1 and QT4-2 need 0.1 and 0 large-model
+calls per request; on QT4-3 the agent is still called when the parser does not prove the contradiction. With
+this smaller agent, unlike with Gemma-4-31B (Table~\ref{tab:prelim}), the self-check prompt no longer helps:
+prompting depends on the agent's own temporal reasoning, while \sys{}'s verdict does not. The pre-flight check
+called none of the 131 logged possible requests impossible.
+
+\paragraph{Possible requests.} The agent alone completes 2 of 148 feasible requests and 1 with self-check;
+\sys{} completes 15 ($p<0.001$ against both, pooled; QT4-1: $p=0.03$, QT4-2: $p=0.02$--$0.04$). The gain is larger in partial progress: on QT4-1, 56 of 138 benchmark goals are met
+with \sys{} against 19 of 148 for the agent alone and 15 of 142 with self-check. In 13 of the 14 episodes that
+only \sys{} completed, the gate had refused a failing step and returned the device's real command signature or
+writable attributes (e.g., \texttt{MoveToLevel(Level, \dots)}, a read-only \texttt{TemperatureSetpoint}, or
+\texttt{DownOrClose} for a window covering that has no \texttt{Close} command); two also involved a time
+refusal and two a no-effect refusal. No arm completes a feasible QT4-3 request, which requires coordinating two
+devices' run times; this agent does not manage it with or without feedback.
+
+\paragraph{Cost and errors.} Gate checks add about one to four agent turns per feasible episode (refusals the
+agent answers). Infrastructure errors (mostly the agent running out of steps) affect 12 runs for the agent
+alone, 25 with self-check, 14 for \sys{} in hint mode and 3 in answer mode, out of 300 or 150 per arm.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Conclusion and Limitations}
@@ -411,10 +438,10 @@ Conflicts that depend on device run-time models (14 QT4-3 episodes) and phrasing
 are not detected. (iv) \emph{Simulation.} The dry run requires a simulator or digital twin of the home; in a
 physical home it is only as accurate as that model. (v) \emph{Evaluation protocol.} We pause the simulator's
 clock during LLM calls to remove hosted-API latency, a deviation from SimuHome's real-time protocol applied to
-all arms alike. (vi) \emph{Prompting baseline.} On impossible requests a self-check prompt matches \sys{}'s
-accuracy with this agent; \sys{}'s advantage there is cost and the guarantee of a proof. (vii) \emph{One agent
-model} so far; results with smaller agent models are future work, as are free-form requests and other device
-domains.
+all arms alike. (vi) \emph{Agents.} With the larger Gemma-4-31B agent a self-check prompt matched \sys{} on
+impossible requests (preliminary run); the full evaluation uses a single 14B agent, whose absolute success on
+feasible requests remains low even with \sys{}, and none of the arms solves feasible QT4-3. Evaluating larger
+agents on the full protocol, free-form requests and other device domains is future work.
 
 \begin{acks}
 Omitted for anonymous review.
