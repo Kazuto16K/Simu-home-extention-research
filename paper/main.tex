@@ -105,6 +105,11 @@ the agent makes. Our contributions are:
   confound, with a 5-fold cross-validated parser and paired comparisons on all 300 SimuHome scheduling episodes,
   together with an analysis of why agents fail on feasible scheduling requests.
 \end{itemize}
+On all 300 SimuHome scheduling episodes with a 14B-parameter agent, \sys{} raises correct handling of
+contradictory requests from 9 to 130 of 150, with almost no large-model calls on two of the three sub-types,
+while a self-check prompt reaches 19. On feasible requests it is the only configuration that helps (15 of 148
+completed, against 2 for the agent alone), and the gains follow directly from refusals that told the agent the
+device's real command signature.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Related Work}
@@ -272,9 +277,10 @@ conflicts between a device's run-time model and a pause request; they are outsid
 and are reported but counted as out of scope. The agent is SimuHome's ReAct agent with its default step limit,
 at temperature 0. The main evaluation uses Qwen2.5-14B-Instruct (4-bit, served locally with Ollama on two T4
 GPUs), a non-reasoning instruction-tuned model; the preliminary runs used Gemma-4-31B-it through a hosted API,
-which became unavailable during the study. Infeasible episodes are scored by SimuHome's panel of three LLM
-judges, using the agent's model; SimuHome reads only the first letter of each verdict, which rules out reasoning
-models as judges.
+which became unavailable during the study. Feasible episodes are scored by SimuHome's simulator alone: the
+home's state is checked at each goal's time, so no LLM judgment is involved. Infeasible episodes are scored by
+SimuHome's panel of three LLM judges, here three votes of the agent's own model; SimuHome reads only the first
+letter of each verdict, which rules out reasoning models as judges. All arms share the same judge.
 
 \paragraph{Arms.} We compare four configurations on the same episodes: the agent alone; the agent with a one-line
 \emph{self-check} instruction to verify all times and report contradictions; \sys{} in hint mode; and \sys{} in
@@ -324,15 +330,65 @@ the constraint system.
   \end{tabular}
 \end{table}
 
-\subsection{Preliminary Evaluation: Contradiction Detection}
+\subsection{Main Result: Full Paired Evaluation}\label{sec:main}
 
-Table~\ref{tab:prelim} reports a preliminary run on the held-out split of the first fold (54 episodes), made with
-an earlier version of the gate (without the repairs of Section~\ref{sec:formalize}) and before latency control. Alone, the
+Table~\ref{tab:full} reports the latency-controlled evaluation on all 300 episodes (about 50 per cell) with the
+Qwen2.5-14B agent; every arm ran on the same episodes.
+
+\begin{table}[t]
+  \caption{Full paired evaluation (Qwen2.5-14B agent, strict scoring). Large-model calls per episode in
+  parentheses. *14 of 50 impossible QT4-3 episodes are out of scope (maximum 36/50).}
+  \label{tab:full}
+  \centering\small
+  \setlength{\tabcolsep}{4pt}
+  \begin{tabular}{llccc}
+    \toprule
+    Case & Arm & QT4-1 & QT4-2 & QT4-3 \
+    \midrule
+    \multirow{3}{*}{Possible} & Agent alone & 0/49 & 2/49 & 0/50 \
+     & Self-check & 0/49 & 1/49 & 0/50 \
+     & \sys{} & \textbf{6/49} & \textbf{9/49} & 0/50 \
+    \midrule
+    \multirow{4}{*}{Impossible} & Agent alone & 3/50 (4.3) & 5/50 (7.1) & 1/50* (7.5) \
+     & Self-check & 5/50 (4.3) & 11/50 (7.6) & 3/50* (7.7) \
+     & \sys{}, hint & \textbf{49/50} (1.1) & \textbf{50/50} (2.0) & \textbf{30/50}* (4.9) \
+     & \sys{}, answer & \textbf{49/50} (0.1) & \textbf{50/50} (0.0) & \textbf{31/50}* (3.1) \
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\paragraph{Impossible requests.} \sys{} handles 129 (hint) and 130 (answer) of 150 contradictory requests
+correctly, against 9 for the agent alone and 19 with the self-check prompt ($p<10^{-30}$ for each comparison,
+McNemar, pooled; $p<10^{-7}$ in every sub-type). In answer mode, QT4-1 and QT4-2 need 0.1 and 0 large-model
+calls per request; on QT4-3 the agent is still called when the parser does not prove the contradiction. With
+this agent, unlike with the larger Gemma-4-31B (Table~\ref{tab:prelim}), the self-check prompt no longer helps:
+prompting depends on the agent's own temporal reasoning, while \sys{}'s verdict does not. The pre-flight check
+called none of the 131 logged possible requests impossible.
+
+\paragraph{Possible requests.} The agent alone completes 2 of 148 feasible requests and 1 with self-check;
+\sys{} completes 15 ($p<0.001$ against both, pooled; QT4-1: $p=0.03$, QT4-2: $p=0.02$--$0.04$). The gain is larger in partial progress: on QT4-1, 56 of 138 benchmark goals are met
+with \sys{} against 19 of 148 for the agent alone and 15 of 142 with self-check. In 13 of the 14 episodes that
+only \sys{} completed, the gate had refused a failing step and returned the device's real command signature or
+writable attributes (e.g., \texttt{MoveToLevel(Level, \dots)}, a read-only \texttt{TemperatureSetpoint}, or
+\texttt{DownOrClose} for a window covering that has no \texttt{Close} command); two also involved a time
+refusal and two a no-effect refusal. No arm completes a feasible QT4-3 request, which requires coordinating two
+devices' run times; this agent does not manage it with or without feedback.
+
+\paragraph{Cost and errors.} Gate checks add about one to four agent turns per feasible episode (refusals the
+agent answers). Infrastructure errors (mostly the agent running out of steps) affect 12 runs for the agent
+alone, 25 with self-check, 14 for \sys{} in hint mode and 3 in answer mode, out of 300 or 150 per arm.
+
+\subsection{A Larger Agent: Preliminary Contradiction Detection}
+
+To see how the picture changes with a stronger agent, Table~\ref{tab:prelim} reports an earlier run with
+Gemma-4-31B on the held-out split of the first fold (54 episodes), made with an earlier version of the gate
+(without the repairs of Section~\ref{sec:formalize}) and before latency control. Alone, the
 agent detects 4 of 10 QT4-1 and none of 8 QT4-2 contradictions, consistent with the contradiction blindness
 reported for SimuHome. \sys{} detects all of them; in answer mode with zero large-model calls, and in hint mode
 with one to two. Episode by episode, answer mode is significantly better than the agent alone
 ($p=0.002$, McNemar, all three sub-types pooled). A self-check prompt reaches the same accuracy with this agent,
-but at 1.1 to 3.5 large-model calls per request, and without a proof. On QT4-3, 5 of the 9 contradictions in this
+but at 1.1 to 3.5 large-model calls per request, and without a proof; with the 14B agent of
+Section~\ref{sec:main} the same prompt fails, while \sys{}'s verdicts are unchanged. On QT4-3, 5 of the 9 contradictions in this
 split are run-time conflicts outside the formalization, so 4 of 9 is the attainable maximum.
 
 \begin{table}[t]
@@ -371,54 +427,6 @@ values (5) and thermostat deadband violations (4). The scheduling tool accepts a
 learns about them. In QT4-3 the agent computed the coordinating device's finish time from a stale clock, pausing
 1--5 minutes early in all 8 scheduled cases. Both error types are exactly what checks (C) and (B) target.
 
-\subsection{Full Paired Evaluation}
-
-Table~\ref{tab:full} reports the latency-controlled evaluation on all 300 episodes (about 50 per cell) with the
-Qwen2.5-14B agent; every arm ran on the same episodes.
-
-\begin{table}[t]
-  \caption{Full paired evaluation (Qwen2.5-14B agent, strict scoring). Large-model calls per episode in
-  parentheses. *14 of 50 impossible QT4-3 episodes are out of scope (maximum 36/50).}
-  \label{tab:full}
-  \centering\small
-  \setlength{\tabcolsep}{4pt}
-  \begin{tabular}{llccc}
-    \toprule
-    Case & Arm & QT4-1 & QT4-2 & QT4-3 \
-    \midrule
-    \multirow{3}{*}{Possible} & Agent alone & 0/49 & 2/49 & 0/50 \
-     & Self-check & 0/49 & 1/49 & 0/50 \
-     & \sys{} & \textbf{6/49} & \textbf{9/49} & 0/50 \
-    \midrule
-    \multirow{4}{*}{Impossible} & Agent alone & 3/50 (4.3) & 5/50 (7.1) & 1/50* (7.5) \
-     & Self-check & 5/50 (4.3) & 11/50 (7.6) & 3/50* (7.7) \
-     & \sys{}, hint & \textbf{49/50} (1.1) & \textbf{50/50} (2.0) & \textbf{30/50}* (4.9) \
-     & \sys{}, answer & \textbf{49/50} (0.1) & \textbf{50/50} (0.0) & \textbf{31/50}* (3.1) \
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-\paragraph{Impossible requests.} \sys{} handles 129 (hint) and 130 (answer) of 150 contradictory requests
-correctly, against 9 for the agent alone and 19 with the self-check prompt ($p<10^{-30}$ for each comparison,
-McNemar, pooled; $p<10^{-7}$ in every sub-type). In answer mode, QT4-1 and QT4-2 need 0.1 and 0 large-model
-calls per request; on QT4-3 the agent is still called when the parser does not prove the contradiction. With
-this smaller agent, unlike with Gemma-4-31B (Table~\ref{tab:prelim}), the self-check prompt no longer helps:
-prompting depends on the agent's own temporal reasoning, while \sys{}'s verdict does not. The pre-flight check
-called none of the 131 logged possible requests impossible.
-
-\paragraph{Possible requests.} The agent alone completes 2 of 148 feasible requests and 1 with self-check;
-\sys{} completes 15 ($p<0.001$ against both, pooled; QT4-1: $p=0.03$, QT4-2: $p=0.02$--$0.04$). The gain is larger in partial progress: on QT4-1, 56 of 138 benchmark goals are met
-with \sys{} against 19 of 148 for the agent alone and 15 of 142 with self-check. In 13 of the 14 episodes that
-only \sys{} completed, the gate had refused a failing step and returned the device's real command signature or
-writable attributes (e.g., \texttt{MoveToLevel(Level, \dots)}, a read-only \texttt{TemperatureSetpoint}, or
-\texttt{DownOrClose} for a window covering that has no \texttt{Close} command); two also involved a time
-refusal and two a no-effect refusal. No arm completes a feasible QT4-3 request, which requires coordinating two
-devices' run times; this agent does not manage it with or without feedback.
-
-\paragraph{Cost and errors.} Gate checks add about one to four agent turns per feasible episode (refusals the
-agent answers). Infrastructure errors (mostly the agent running out of steps) affect 12 runs for the agent
-alone, 25 with self-check, 14 for \sys{} in hint mode and 3 in answer mode, out of 300 or 150 per arm.
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Conclusion and Limitations}
 
@@ -427,7 +435,10 @@ request and the plan of an unmodified LLM agent before anything is executed in t
 are decided by proof and can be answered without any large-model call; scheduling calls are checked against
 request-derived time windows and a dry run of the home, and refused with fixes the agent can act on. The method
 addresses the failure modes identified for current smart-home agents, contradiction blindness and the absence
-of feedback after scheduling, while leaving the agent and its tools untouched.
+of feedback after scheduling, while leaving the agent and its tools untouched. On 300 paired episodes it
+turns a 14B agent that handles 6\% of contradictory requests into a system that handles 87\%, mostly without
+calling the large model, and it is the only configuration that completes feasible requests at a non-trivial
+rate, by telling the agent exactly how to fix the commands it gets wrong.
 
 \paragraph{Limitations.} (i) \emph{One benchmark and one language style.} All results are on SimuHome, whose
 requests are generated from templates, and the parser is trained on the same style; robustness to free-form
@@ -441,7 +452,10 @@ clock during LLM calls to remove hosted-API latency, a deviation from SimuHome's
 all arms alike. (vi) \emph{Agents.} With the larger Gemma-4-31B agent a self-check prompt matched \sys{} on
 impossible requests (preliminary run); the full evaluation uses a single 14B agent, whose absolute success on
 feasible requests remains low even with \sys{}, and none of the arms solves feasible QT4-3. Evaluating larger
-agents on the full protocol, free-form requests and other device domains is future work.
+agents on the full protocol, free-form requests and other device domains is future work. (vii) \emph{Judge.}
+Impossible requests are scored by the agent's own model; all arms share this judge, and feasible requests involve
+no judge at all, but re-scoring with an independent judge and a manual audit of a sample of verdicts remain to be
+done.
 
 \begin{acks}
 Omitted for anonymous review.
