@@ -362,7 +362,11 @@ correctly, against 9 for the agent alone and 19 with the self-check prompt ($p<1
 McNemar, pooled; $p<10^{-7}$ in every sub-type). In answer mode, QT4-1 and QT4-2 need 0.1 and 0 large-model
 calls per request; on QT4-3 the agent is still called when the parser does not prove the contradiction. With
 this agent, unlike with the larger Gemma-4-31B (Table~\ref{tab:prelim}), the self-check prompt no longer helps:
-prompting depends on the agent's own temporal reasoning, while \sys{}'s verdict does not. The pre-flight check
+prompting depends on the agent's own temporal reasoning, while \sys{}'s verdict does not. The judge is
+not error-free in either direction that matters here: in 18 impossible-request episodes it accepted an answer
+although the agent had scheduled actions anyway, 17 of them for the agent alone or with self-check. Counting
+these as failures lowers the baselines to 2 and 9 of 150 and leaves \sys{} at 129, so the reported gap is
+conservative. The pre-flight check
 called none of the 131 logged possible requests impossible.
 
 \paragraph{Possible requests.} The agent alone completes 2 of 148 feasible requests and 1 with self-check;
